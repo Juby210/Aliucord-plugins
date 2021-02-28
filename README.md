@@ -22,6 +22,9 @@ Adds more slash commands.
 ### NoAutoReplyMention
 Disables reply mention by default.
 
+### NoCopyEmbeds
+Disables copying text from embeds.
+
 ### NoGiftButton
 Hides useless gift button.
 
