@@ -19,6 +19,11 @@ Hides disabled emojis in emoji picker and autocomplete.
 ### MoreSlashCommands
 Adds more slash commands.
 
+Commands:
+- lenny
+- mock
+- spoilerfiles
+
 ### NoAutoReplyMention
 Disables reply mention by default.
 
@@ -36,3 +41,6 @@ Display square avatars instead of circles.
 
 ### Tags
 Allows you to send custom tags.
+
+### ViewRaw
+View & Copy raw message and markdown.
