@@ -8,6 +8,12 @@
     "SquareAvatars": {
         "version": "0.0.1"
     },
+    "Tags": {
+        "version": "1.0.1"
+    },
+    "ViewRaw": {
+        "version": "1.0.1"
+    },
     "default": {
         "minimumDiscordVersion": 1456,
         "version": "1.0.0",

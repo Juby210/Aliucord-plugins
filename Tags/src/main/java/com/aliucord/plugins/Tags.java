@@ -25,7 +25,7 @@ public class Tags extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Allows you to send custom tags.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -73,6 +73,20 @@ public class Tags extends Plugin {
         ));
         subcommands.add(new ApplicationCommandOption(
                 ApplicationCommandType.SUBCOMMAND,
+                "rename",
+                "Rename a tag",
+                null,
+                false,
+                false,
+                null,
+                Arrays.asList(
+                        existingTag,
+                        new ApplicationCommandOption(ApplicationCommandType.STRING, "newName", "New tag name",
+                                null, true, true, null, null)
+                )
+        ));
+        subcommands.add(new ApplicationCommandOption(
+                ApplicationCommandType.SUBCOMMAND,
                 "update",
                 "Update a tag",
                 null,
@@ -93,6 +107,7 @@ public class Tags extends Plugin {
                     if (args.containsKey("add")) return AddCommand.execute((Map<String, ?>) args.get("add"), sets, this);
                     if (args.containsKey("delete")) return DeleteCommand.execute((Map<String, ?>) args.get("delete"), sets, this);
                     if (args.containsKey("list")) return ListCommand.execute(sets);
+                    if (args.containsKey("rename")) return RenameCommand.execute((Map<String, ?>) args.get("rename"), sets, this);
                     if (args.containsKey("update")) return UpdateCommand.execute((Map<String, ?>) args.get("update"), sets, this);
 
                     HashMap<String, String> tags = sets.getObject("tags", null, tagsType);
@@ -148,8 +163,10 @@ public class Tags extends Plugin {
     }
 
     public String runTag(String value, Map<String, ?> args) {
-        for (Map.Entry<String, ?> arg : args.entrySet()) {
-            value = value.replace("[" + arg.getKey() + "]", (String) arg.getValue());
+        Matcher matcher = argPattern.matcher(value);
+        while (matcher.find()) {
+            String v = (String) args.get(matcher.group(1));
+            value = value.replace(matcher.group(), v == null ? "" : v);
         }
         return value;
     }

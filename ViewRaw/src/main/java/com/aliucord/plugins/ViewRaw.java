@@ -56,35 +56,39 @@ public class ViewRaw extends Plugin {
         }
 
         @Override
+        @SuppressLint("SetTextI18n")
         public void onViewBound(View view) {
             super.onViewBound(view);
 
             Context context = view.getContext();
             LinearLayout layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
-
-            TextView textView = new TextView(context);
-            BlockBackgroundNode<BasicRenderContext> node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
-                new CodeNode$a.b<>(message.getContent()), "", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
-            ));
-            SpannableStringBuilder builder = new SpannableStringBuilder();
-            node.render(builder, new RenderContext(context));
-            textView.setText(builder);
-            textView.setTextIsSelectable(true);
             int padding = Utils.getDefaultPadding();
-            textView.setPadding(padding, padding, padding, padding);
-            layout.addView(textView);
 
-            layout.addView(new Divider(context));
+            String content = message.getContent();
+            if (content != null && !content.equals("")) {
+                TextView textView = new TextView(context);
+                BlockBackgroundNode<BasicRenderContext> node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
+                        new CodeNode$a.b<>(content), "", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
+                ));
+                SpannableStringBuilder builder = new SpannableStringBuilder();
+                node.render(builder, new RenderContext(context));
+                textView.setText(builder);
+                textView.setTextIsSelectable(true);
+                textView.setPadding(padding, padding, padding, padding);
+                layout.addView(textView);
+                layout.addView(new Divider(context));
+            }
+
             TextView header = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Header);
             header.setText("All Raw Data");
             header.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
             layout.addView(header);
 
-            textView = new TextView(context);
-            node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
+            TextView textView = new TextView(context);
+            BlockBackgroundNode<BasicRenderContext> node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
                     new CodeNode$a.b<>(Utils.toJsonPretty(message)), "json", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
             ));
-            builder = new SpannableStringBuilder();
+            SpannableStringBuilder builder = new SpannableStringBuilder();
             node.render(builder, new RenderContext(context));
             textView.setText(builder);
             textView.setTextIsSelectable(true);
@@ -111,7 +115,7 @@ public class ViewRaw extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "View & Copy raw message and markdown.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
