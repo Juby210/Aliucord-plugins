@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
-import android.text.style.LeadingMarginSpan;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;

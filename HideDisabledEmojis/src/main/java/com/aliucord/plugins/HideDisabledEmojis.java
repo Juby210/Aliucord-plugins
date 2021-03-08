@@ -6,7 +6,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.aliucord.Utils;
+import com.aliucord.CollectionUtils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PrePatchRes;
 import com.discord.models.domain.emoji.Emoji;
@@ -42,7 +42,7 @@ public class HideDisabledEmojis extends Plugin {
         patcher.prePatch(className, "buildEmojiListItems", (_this, args) -> {
             List<? extends Emoji> emojis = (List<? extends Emoji>) args.get(0);
             if (!(emojis instanceof ArrayList)) emojis = new ArrayList<>(emojis);
-            Utils.removeIf(emojis, e -> !e.isUsable());
+            CollectionUtils.removeIf(emojis, e -> !e.isUsable());
             args.set(0, emojis);
             return new PrePatchRes(args);
         });

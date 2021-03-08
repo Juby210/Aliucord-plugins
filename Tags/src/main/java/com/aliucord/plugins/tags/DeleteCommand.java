@@ -1,6 +1,6 @@
 package com.aliucord.plugins.tags;
 
-import com.aliucord.Utils;
+import com.aliucord.CollectionUtils;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.MessageEmbed;
@@ -23,8 +23,8 @@ public class DeleteCommand {
             HashMap<String, String> tags = sets.getObject("tags", new HashMap<>(), Tags.tagsType);
             tags.remove(name);
             sets.setObject("tags", tags);
-            Utils.removeIf(main.existingTags, tag -> tag.a().equals(name));
-            Utils.removeIf(main.subcommands, option -> option.getName().equals(name));
+            CollectionUtils.removeIf(main.existingTags, tag -> tag.a().equals(name));
+            CollectionUtils.removeIf(main.subcommands, option -> option.getName().equals(name));
         }
 
         return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
