@@ -21,7 +21,7 @@ public class SquareAvatars extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.2";
+        manifest.version = "0.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -29,7 +29,7 @@ public class SquareAvatars extends Plugin {
     private static final String className = "p.a.b.b.a";
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put(className, Collections.singletonList("A0"));
+        map.put(className, Collections.singletonList("B0"));
         map.put("com.discord.views.user.UserAvatarPresenceView", Collections.singletonList("setAvatarBackgroundColor"));
         return map;
     }
@@ -40,7 +40,7 @@ public class SquareAvatars extends Plugin {
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch(className, "A0", (_this, args, ret) -> {
+        patcher.patch(className, "B0", (_this, args, ret) -> {
             if (args.size() < 3) return ret;
             AttributeSet attrs = (AttributeSet) args.get(2);
             if (attrs == null) return ret;
