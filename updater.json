@@ -6,7 +6,8 @@
         "version": "0.0.1"
     },
     "SquareAvatars": {
-        "version": "0.0.1"
+        "version": "0.0.2",
+        "minimumDiscordVersion": 1465
     },
     "Tags": {
         "version": "1.0.1"
