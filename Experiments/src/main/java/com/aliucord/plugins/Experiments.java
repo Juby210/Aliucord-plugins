@@ -26,7 +26,7 @@ public class Experiments extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Shows hidden Developer Options tab with Experiments.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -50,9 +50,9 @@ public class Experiments extends Plugin {
                 try {
                     WidgetSettingsBinding binding = (WidgetSettingsBinding) getBinding.invoke(_this);
                     if (binding == null) return ret;
-                    binding.l.setVisibility(View.VISIBLE);
                     binding.m.setVisibility(View.VISIBLE);
-                    binding.k.setVisibility(View.VISIBLE);
+                    binding.n.setVisibility(View.VISIBLE);
+                    binding.l.setVisibility(View.VISIBLE);
                 } catch (Throwable e) { Main.logger.error(e); }
                 return ret;
             });

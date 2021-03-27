@@ -20,12 +20,12 @@ public class NoCopyEmbeds extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Disables copying text from embeds.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
-    private static final String className = "com.discord.widgets.chat.list.WidgetChatListAdapterItemEmbed$1";
+    private static final String className = "com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed$1";
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
         map.put(className, Collections.singletonList("invoke"));

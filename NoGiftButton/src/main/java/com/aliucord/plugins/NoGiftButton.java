@@ -10,6 +10,8 @@ import com.lytefast.flexinput.fragment.FlexInputFragment;
 
 import java.util.*;
 
+import c.b.a.e.a;
+
 @SuppressWarnings("unused")
 public class NoGiftButton extends Plugin {
     @NonNull
@@ -18,7 +20,7 @@ public class NoGiftButton extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Hides useless gift button.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -32,7 +34,7 @@ public class NoGiftButton extends Plugin {
     public void start(Context context) {
         patcher.patch("com.lytefast.flexinput.fragment.FlexInputFragment$d", "invoke", (_this, args, ret) -> {
             FlexInputFragment fragment = (FlexInputFragment) ((FlexInputFragment.d) _this).receiver;
-            f.b.a.d.a widgetBinding = fragment.i();
+            a widgetBinding = fragment.i();
             if (widgetBinding != null) {
                 widgetBinding.h.setVisibility(View.GONE); // hide expand button
                 widgetBinding.n.setVisibility(View.GONE); // hide gift button

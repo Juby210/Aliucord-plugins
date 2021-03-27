@@ -13,6 +13,9 @@ import com.aliucord.patcher.PrePatchRes;
 
 import java.util.*;
 
+import c.f.g.f.a;
+import c.f.g.f.c;
+
 @SuppressWarnings("unused")
 public class SquareAvatars extends Plugin {
     @NonNull
@@ -21,16 +24,20 @@ public class SquareAvatars extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.3";
+        manifest.version = "0.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
-    private static final String className = "p.a.b.b.a";
+    private static final String className = "android.support.v4.media.MediaDescriptionCompatApi21$Builder";
+    private static final String mgImagesClass = "com.discord.utilities.images.MGImages";
+    private static final String avatarViewClass = "com.discord.views.user.UserAvatarPresenceView";
+
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put(className, Collections.singletonList("B0"));
-        map.put("com.discord.views.user.UserAvatarPresenceView", Collections.singletonList("setAvatarBackgroundColor"));
+        map.put(className, Collections.singletonList("D0"));
+        map.put(mgImagesClass, Collections.singletonList("setCornerRadius"));
+        map.put(avatarViewClass, Collections.singletonList("setAvatarBackgroundColor"));
         return map;
     }
 
@@ -38,16 +45,18 @@ public class SquareAvatars extends Plugin {
     public void start(Context ctx) {
         Logger logger = new Logger("SquareAvatars");
 
+        float _3dp = Utils.dpToPx(3);
+
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch(className, "B0", (_this, args, ret) -> {
+        patcher.patch(className, "D0", (_this, args, ret) -> {
             if (args.size() < 3) return ret;
             AttributeSet attrs = (AttributeSet) args.get(2);
             if (attrs == null) return ret;
 
             try {
-                f.f.g.f.a builder = (f.f.g.f.a) ret;
-                f.f.g.f.c roundingParams = builder.p;
+                a builder = (a) ret;
+                c roundingParams = builder.r;
 
                 if (roundingParams != null && roundingParams.b) {
                     Context context = (Context) args.get(1);
@@ -61,7 +70,7 @@ public class SquareAvatars extends Plugin {
                             radii = new float[8];
                             roundingParams.c = radii;
                         }
-                        Arrays.fill(radii, Utils.dpToPx(3));
+                        Arrays.fill(radii, _3dp);
                     }
                 }
             } catch (Exception e) { logger.error(e); }
@@ -69,17 +78,23 @@ public class SquareAvatars extends Plugin {
             return ret;
         });
 
-        patcher.prePatch(
-                "com.discord.views.user.UserAvatarPresenceView",
-                "setAvatarBackgroundColor",
-                (_this, args) -> new PrePatchRes(args, null)
-        );
+        patcher.prePatch(avatarViewClass, "setAvatarBackgroundColor", (_this, args) -> {
+            unpatch = patcher.prePatch(mgImagesClass, "setCornerRadius", (_this1, args1) -> {
+                args1.set(1, _3dp);
+                args1.set(2, false);
+                unpatch.run();
+                return new PrePatchRes(args1);
+            });
+            return new PrePatchRes(args);
+        });
     }
 
     @Override
     public void stop(Context context) {
         patcher.unpatchAll();
     }
+
+    private Runnable unpatch;
 
     private boolean contains(String s) {
         if (s.contains("id/guilds_item_profile_avatar_background")) return false;

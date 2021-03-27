@@ -1,13 +1,29 @@
 {
+    "Experiments": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 1498
+    },
     "MoreSlashCommands": {
         "version": "0.0.2"
     },
     "NoAutoReplyMention": {
         "version": "0.0.1"
     },
+    "NoCopyEmbeds": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 1498
+    },
+    "NoGiftButton": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 1498
+    },
+    "RemoveZoomLimit": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 1498
+    },
     "SquareAvatars": {
-        "version": "0.0.3",
-        "minimumDiscordVersion": 1467
+        "version": "0.0.4",
+        "minimumDiscordVersion": 1498
     },
     "Tags": {
         "version": "1.0.1"
