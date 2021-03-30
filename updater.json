@@ -1,4 +1,7 @@
 {
+    "CustomTimestamps": {
+        "version": "1.0.1"
+    },
     "Experiments": {
         "version": "1.0.1",
         "minimumDiscordVersion": 1498
