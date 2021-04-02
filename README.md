@@ -42,5 +42,8 @@ Display square avatars instead of circles.
 ### Tags
 Allows you to send custom tags.
 
+### UnlockGameDetection
+Unlocks game detection on all devices.
+
 ### ViewRaw
 View & Copy raw message and markdown.
