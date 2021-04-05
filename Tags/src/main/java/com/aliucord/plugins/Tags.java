@@ -25,7 +25,7 @@ public class Tags extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Allows you to send custom tags.";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -153,7 +153,7 @@ public class Tags extends Plugin {
         subcommands.add(new ApplicationCommandOption(
                 ApplicationCommandType.SUBCOMMAND,
                 name,
-                "Tag: " + message,
+                "Tag: " + (message.length() > 150 ? message.substring(0, 150) + "…" : message),
                 null,
                 false,
                 false,
