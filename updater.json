@@ -6,6 +6,9 @@
         "version": "1.0.1",
         "minimumDiscordVersion": 1498
     },
+    "HideDisabledEmojis": {
+        "version": "1.0.1"
+    },
     "MoreSlashCommands": {
         "version": "0.0.2"
     },
@@ -25,8 +28,8 @@
         "minimumDiscordVersion": 1498
     },
     "SquareAvatars": {
-        "version": "0.0.4",
-        "minimumDiscordVersion": 1498
+        "version": "0.0.5",
+        "minimumDiscordVersion": 1509
     },
     "Tags": {
         "version": "1.0.2"
