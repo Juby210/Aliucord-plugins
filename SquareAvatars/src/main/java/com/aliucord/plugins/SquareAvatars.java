@@ -10,6 +10,8 @@ import com.aliucord.Logger;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PrePatchRes;
+import com.discord.utilities.images.MGImages;
+import com.discord.views.user.UserAvatarPresenceView;
 
 import java.util.*;
 
@@ -24,19 +26,16 @@ public class SquareAvatars extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.5";
+        manifest.version = "0.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
-    private static final String className = "android.support.v4.media.MediaDescriptionCompatApi21$Builder";
-    private static final String mgImagesClass = "com.discord.utilities.images.MGImages";
+    private static final String className = "com.airbnb.lottie.parser.AnimatableValueParser";
     private static final String avatarViewClass = "com.discord.views.user.UserAvatarPresenceView";
-
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put(className, Collections.singletonList("H0"));
-        map.put(mgImagesClass, Collections.singletonList("setCornerRadius"));
+        map.put(className, Collections.singletonList("A2"));
         map.put(avatarViewClass, Collections.singletonList("setAvatarBackgroundColor"));
         return map;
     }
@@ -49,7 +48,7 @@ public class SquareAvatars extends Plugin {
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch(className, "H0", (_this, args, ret) -> {
+        patcher.patch(className, "A2", (_this, args, ret) -> {
             if (args.size() < 3) return ret;
             AttributeSet attrs = (AttributeSet) args.get(2);
             if (attrs == null) return ret;
@@ -78,14 +77,9 @@ public class SquareAvatars extends Plugin {
             return ret;
         });
 
-        patcher.prePatch(avatarViewClass, "setAvatarBackgroundColor", (_this, args) -> {
-            unpatch = patcher.prePatch(mgImagesClass, "setCornerRadius", (_this1, args1) -> {
-                args1.set(1, _3dp);
-                args1.set(2, false);
-                unpatch.run();
-                return new PrePatchRes(args1);
-            });
-            return new PrePatchRes(args);
+        patcher.patch(avatarViewClass, "setAvatarBackgroundColor", (_this, args, ret) -> {
+            MGImages.setRoundingParams(((UserAvatarPresenceView) _this).h.b, _3dp, false, (Integer) args.get(0), null, null);
+            return ret;
         });
     }
 
@@ -93,8 +87,6 @@ public class SquareAvatars extends Plugin {
     public void stop(Context context) {
         patcher.unpatchAll();
     }
-
-    private Runnable unpatch;
 
     private boolean contains(String s) {
         if (s.contains("id/guilds_item_profile_avatar_background")) return false;
