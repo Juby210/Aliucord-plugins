@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
 
+import com.aliucord.Main;
 import com.aliucord.PluginManager;
 import com.aliucord.Utils;
 import com.aliucord.api.SettingsAPI;
@@ -69,6 +70,7 @@ public class CustomTimestamps extends Plugin {
             input.setLayoutParams(params);
             input.setHint("Custom Timestamp Format");
             EditText editText = input.getEditText();
+            if (editText == null) return;
             editText.setMaxLines(1);
             editText.setText(format);
             editText.addTextChangedListener(new TextWatcher() {
@@ -85,9 +87,9 @@ public class CustomTimestamps extends Plugin {
             layout.addView(guide);
         }
 
-        private void setPreview(String format, TextView view) {
+        private void setPreview(String formatStr, TextView view) {
             SpannableStringBuilder s = new SpannableStringBuilder("Formatting guide\n\nPreview: ");
-            s.append(new SimpleDateFormat(format).format(System.currentTimeMillis()));
+            s.append(format(formatStr, System.currentTimeMillis()));
             s.setSpan(new URLSpan("https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"), 0, 16, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             view.setText(s);
         }
@@ -103,22 +105,33 @@ public class CustomTimestamps extends Plugin {
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
+
+    private static final String className = "com.discord.utilities.time.TimeUtils";
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put("com.discord.utilities.time.TimeUtils", Collections.singletonList("toReadableTimeString"));
+        map.put(className, Collections.singletonList("toReadableTimeString"));
         return map;
     }
 
     @Override
     public void start(Context context) {
-        patcher.prePatch("com.discord.utilities.time.TimeUtils", "toReadableTimeString", (_this, args) -> {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(sets.getString("format", "dd.MM.yyyy, HH:mm:ss"));
-            return new PrePatchRes(args, dateFormat.format(new Date((long) args.get(1))));
-        });
+        patcher.patch(className, "toReadableTimeString", (_this, args, ret) ->
+                format(sets.getString("format", defaultFormat), (long) args.get(1)));
     }
 
     @Override
     public void stop(Context context) {
         patcher.unpatchAll();
+    }
+
+    private static final String defaultFormat = "dd.MM.yyyy, HH:mm:ss";
+
+    public static String format(String format, long time) {
+        try {
+            return new SimpleDateFormat(format).format(new Date(time));
+        } catch (Throwable e) {
+            Main.logger.info("Invalid format for CustomTimestamps, using default format");
+            return new SimpleDateFormat(defaultFormat).format(new Date(time));
+        }
     }
 }
