@@ -18,7 +18,7 @@ public final class Constants {
         put("ht", Arrays.asList("he/they", "He/They"));
         put("ih", Arrays.asList("it/him", "It/Him"));
         put("ii", Arrays.asList("it/its", "It/Its"));
-        put("is", Arrays.asList("it/she", "it/she"));
+        put("is", Arrays.asList("it/she", "It/She"));
         put("it", Arrays.asList("it/they", "It/They"));
         put("shh", Arrays.asList("she/he", "She/He"));
         put("sh", Arrays.asList("she/her", "She/Her"));
