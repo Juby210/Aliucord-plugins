@@ -36,7 +36,7 @@ public final class Store {
             Map<Long, String> res = Utils.fromJson(request(Constants.Endpoints.LOOKUP_BULK(bufferCopy)), resType);
             cache.putAll(res);
             for (Long id : bufferCopy) {
-                if (!cache.containsKey(id)) cache.put(id, "-");
+                if (!cache.containsKey(id)) cache.put(id, "unspecified");
             }
         } catch (Throwable e) {
             Main.logger.error("PronounDB error", e);

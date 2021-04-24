@@ -136,7 +136,7 @@ public class PronounDB extends Plugin {
 
     public void addPronounsToHeader(TextView pronounsView, Long userId) {
         String c = Store.cache.get(userId);
-        if (c == null || c.equals("-")) {
+        if (c == null || c.equals("unspecified")) {
             pronounsView.setVisibility(View.GONE);
             return;
         }
@@ -146,7 +146,7 @@ public class PronounDB extends Plugin {
 
     public void addPronounsToUserSheet(WidgetUserSheetBinding binding, Long userId) {
         String c = Store.cache.get(userId);
-        if (c == null || c.equals("-")) return;
+        if (c == null || c.equals("unspecified")) return;
 
         TextView noteHeader = binding.t;
         LinearLayout layout = (LinearLayout) noteHeader.getParent();
