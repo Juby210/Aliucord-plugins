@@ -33,6 +33,12 @@ Disables copying text from embeds.
 ### NoGiftButton
 Hides useless gift button.
 
+### PronounDB
+PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.
+
+TODO:
+- display in autocomplete
+
 ### RemoveZoomLimit
 Removes maximum (and minimum) zoom limit.
 
