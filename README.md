@@ -45,6 +45,9 @@ Removes maximum (and minimum) zoom limit.
 ### SquareAvatars
 Display square avatars instead of circles.
 
+### StickerTweaks
+Adds option to enable/disable stickers and stickers autocomplete.
+
 ### Tags
 Allows you to send custom tags.
 
