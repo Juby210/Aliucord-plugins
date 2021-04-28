@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion "$sdkVersion"
-    buildToolsVersion "$buildToolsVersion"
+    compileSdkVersion sdkVer
+    buildToolsVersion buildToolsVer
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion "$sdkVersion"
+        targetSdkVersion sdkVer
         versionCode 1
         versionName "1.0"
     }
@@ -25,9 +25,9 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:$appCompatVersion"
-    implementation "com.google.android.material:material:$materialVersion"
-    implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVersion"
+    implementation "androidx.appcompat:appcompat:$appCompatVer"
+    implementation "com.google.android.material:material:$materialVer"
+    implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVer"
 
     implementation project(':Aliucord')
 }

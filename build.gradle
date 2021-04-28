@@ -13,12 +13,12 @@ buildscript {
 }
 
 ext {
-    sdkVersion = 29
-    buildToolsVersion = "29.0.2"
+    sdkVer = 29
+    buildToolsVer = "29.0.2"
 
-    appCompatVersion = "1.2.0"
-    materialVersion = "1.2.1"
-    constraintLayoutVersion = "2.0.1"
+    appCompatVer = "1.2.0"
+    materialVer = "1.2.1"
+    constraintLayoutVer = "2.0.1"
 }
 
 allprojects {
