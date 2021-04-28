@@ -51,5 +51,12 @@ Allows you to send custom tags.
 ### UnlockGameDetection
 Unlocks game detection on all devices.
 
+### UserDetails
+Displays when user created account, joined to server and when sent last message in selected server / dm.
+
+TODO:
+- custom format
+- first message
+
 ### ViewRaw
 View & Copy raw message and markdown.
