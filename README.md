@@ -51,9 +51,6 @@ Adds option to enable/disable stickers and stickers autocomplete.
 ### [Tags](https://github.com/Juby210/Aliucord-plugins/raw/builds/Tags.apk)
 Allows you to send custom tags.
 
-### [UnlockGameDetection](https://github.com/Juby210/Aliucord-plugins/raw/builds/UnlockGameDetection.apk)
-Unlocks game detection on all devices.
-
 ### [UserDetails](https://github.com/Juby210/Aliucord-plugins/raw/builds/UserDetails.apk)
 Displays when user created account, joined to server and when sent last message in selected server / dm.
 

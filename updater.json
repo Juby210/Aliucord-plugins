@@ -28,11 +28,15 @@
         "minimumDiscordVersion": 1498
     },
     "SquareAvatars": {
-        "version": "0.0.6",
-        "minimumDiscordVersion": 1520
+        "version": "0.0.7",
+        "minimumDiscordVersion": 74107
     },
     "Tags": {
         "version": "1.0.2"
+    },
+    "UserDetails": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 74107
     },
     "ViewRaw": {
         "version": "1.0.1"

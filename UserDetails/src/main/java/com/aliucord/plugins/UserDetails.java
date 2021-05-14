@@ -36,10 +36,7 @@ import com.lytefast.flexinput.R$h;
 
 import java.util.*;
 
-import i0.l.e.b;
 import rx.Subscription;
-import rx.functions.Action0;
-import rx.functions.Action1;
 
 @SuppressLint("SetTextI18n")
 @SuppressWarnings({"unused"})
@@ -64,7 +61,7 @@ public class UserDetails extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         return manifest;
     }
 
@@ -81,8 +78,8 @@ public class UserDetails extends Plugin {
     public void start(Context ctx) {
         patcher.patch(storeGuildsClass, "handleGuildMember", (_this, args, ret) -> {
             GuildMember member = (GuildMember) args.get(0);
-            if (member.c() != null && member.h() != null) {
-                long id = member.h().f();
+            if (member.c() != null && member.i() != null) {
+                long id = member.i().f();
                 cacheData((Long) args.get(1), id, member.c().f(), 0);
                 if (lastRequestedMember == id && forceUpdate != null) {
                     lastRequestedMember = 0;
@@ -92,11 +89,11 @@ public class UserDetails extends Plugin {
             return ret;
         });
 
-        subscription = StoreStream.getGatewaySocket().getMessageCreate().I().S(new b<>(message -> {
+        subscription = StoreStream.getGatewaySocket().getMessageCreate().I().T(Utils.createActionSubscriber(message -> {
             if (message == null) return;
             Long guildId = message.getGuildId();
             cacheData(guildId == null ? message.getChannelId() : guildId, message.getAuthor().f(), 0, SnowflakeUtils.toTimestamp(message.getId()));
-        }, onError, onCompleted));
+        }));
 
         patcher.patch(userProfileHeaderClass, "updateViewState", (_this, args, ret) -> {
             try {
@@ -118,8 +115,6 @@ public class UserDetails extends Plugin {
     public long lastRequestedSearch;
     public Runnable forceUpdate;
 
-    private final Action1<Throwable> onError = e -> {};
-    private final Action0 onCompleted = () -> {};
     public Subscription subscription;
     public Subscription searchSubscription;
 
@@ -222,7 +217,7 @@ public class UserDetails extends Plugin {
                 new StoreSearch.SearchTarget(dm ? StoreSearch.SearchTarget.Type.CHANNEL : StoreSearch.SearchTarget.Type.GUILD, id),
                 null,
                 new SearchQuery(params, true)
-        ).S(new b<>(res -> {
+        ).T(Utils.createActionSubscriber(res -> {
             if (res == null || res.getErrorCode() != null) return;
             if (res.getTotalResults() == 0) {
                 cacheData(id, authorId, 0, -1);
@@ -235,6 +230,6 @@ public class UserDetails extends Plugin {
                 new Handler(Looper.getMainLooper()).post(forceUpdate);
             }
             searchSubscription.unsubscribe();
-        }, onError, onCompleted));
+        }));
     }
 }

@@ -12,7 +12,6 @@ include ':RestoreImageLinks'
 include ':SquareAvatars'
 include ':StickerTweaks'
 include ':Tags'
-include ':UnlockGameDetection'
 include ':UserDetails'
 include ':ViewRaw'
 rootProject.name = "plugins"
