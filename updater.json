@@ -44,6 +44,6 @@
     "default": {
         "minimumDiscordVersion": 1456,
         "version": "1.0.0",
-        "build": "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/%s.apk"
+        "build": "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/%s.zip"
     }
 }
