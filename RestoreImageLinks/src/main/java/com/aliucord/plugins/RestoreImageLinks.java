@@ -35,7 +35,7 @@ public class RestoreImageLinks extends Plugin {
     @Override
     public void start(Context context) {
         patcher.prePatch("com.discord.utilities.textprocessing.MessagePreprocessor", "stripSimpleEmbedLink",
-                (_this, args) -> new PrePatchRes(args, null));
+                (_this, args) -> new PrePatchRes(null));
     }
 
     @Override

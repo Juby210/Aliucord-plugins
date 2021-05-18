@@ -18,3 +18,5 @@ rootProject.name = "plugins"
 
 include ':Aliucord'
 project(':Aliucord').projectDir = new File('../repo/Aliucord')
+include ':DiscordStubs'
+project(':DiscordStubs').projectDir = new File('../repo/DiscordStubs')

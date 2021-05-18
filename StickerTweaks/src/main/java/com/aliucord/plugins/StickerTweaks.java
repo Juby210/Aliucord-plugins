@@ -73,7 +73,7 @@ public class StickerTweaks extends Plugin {
 
     @Override
     public void start(Context context) {
-        patcher.prePatch(className, "isEnabled", (_this, args) -> new PrePatchRes(args, sets.getBool("enabled", true)));
+        patcher.prePatch(className, "isEnabled", (_this, args) -> new PrePatchRes(sets.getBool("enabled", true)));
 
         patcher.patch(chatInputMappingFunctions, "getStickerMatches", (_this, args, ret) -> {
             if (!sets.getBool("autocomplete", true)) return Collections.EMPTY_LIST;

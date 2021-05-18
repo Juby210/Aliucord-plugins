@@ -5,7 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PrePatchRes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ public class NoAutoReplyMention extends Plugin {
         patcher.prePatch(className, "onCreatePendingReply", (_this, args) -> {
             args.set(2, false);
             args.set(3, true);
-            return new PrePatchRes(args);
+            return null;
         });
     }
 

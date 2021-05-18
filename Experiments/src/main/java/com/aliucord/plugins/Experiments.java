@@ -39,7 +39,7 @@ public class Experiments extends Plugin {
 
     @Override
     public void start(Context context) {
-        PrePatchFunction patch = (_this, args) -> new PrePatchRes(args, true);
+        PrePatchFunction patch = (_this, args) -> new PrePatchRes(true);
         patcher.prePatch("com.discord.stores.StoreExperiments$getExperimentalAlpha$1", "invoke", patch);
 
         try {

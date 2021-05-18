@@ -40,7 +40,7 @@ public class RemoveZoomLimit extends Plugin {
 
         // com.facebook.samples.zoomable.DefaultZoomableController limitScale
         // https://github.com/facebook/fresco/blob/master/samples/zoomable/src/main/java/com/facebook/samples/zoomable/DefaultZoomableController.java#L474-L495
-        patcher.prePatch(className, "f", (_this, args) -> new PrePatchRes(args, false));
+        patcher.prePatch(className, "f", (_this, args) -> new PrePatchRes(false));
     }
 
     @Override

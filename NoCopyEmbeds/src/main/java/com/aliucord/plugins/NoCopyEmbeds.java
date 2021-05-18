@@ -34,7 +34,7 @@ public class NoCopyEmbeds extends Plugin {
 
     @Override
     public void start(Context context) {
-        patcher.prePatch(className, "invoke", (_this, args) -> new PrePatchRes(args, null));
+        patcher.prePatch(className, "invoke", (_this, args) -> new PrePatchRes(null));
     }
 
     @Override
