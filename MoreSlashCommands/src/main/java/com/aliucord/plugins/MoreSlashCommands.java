@@ -60,7 +60,43 @@ public class MoreSlashCommands extends Plugin {
                 }
         );
 
-        // spilerfiles command
+        commands.registerCommand(
+                "upper",
+                "Makes text uppercase",
+                Collections.singletonList(CommandsAPI.requiredMessageOption),
+                args -> {
+                    String msg = (String) args.get("message");
+                    if (msg == null) return new CommandsAPI.CommandResult(msg);
+                    StringBuilder newMsg = new StringBuilder(msg.trim());
+                    return new CommandsAPI.CommandResult(newMsg.toString().toUpperCase());
+                }
+        );
+
+        commands.registerCommand(
+                "lower",
+                "Makes text lowercase",
+                Collections.singletonList(CommandsAPI.requiredMessageOption),
+                args -> {
+                    String msg = (String) args.get("message");
+                    if (msg == null) return new CommandsAPI.CommandResult(msg);
+                    StringBuilder newMsg = new StringBuilder(msg.trim());
+                    return new CommandsAPI.CommandResult(newMsg.toString().toLowerCase());
+                }
+        );
+
+        commands.registerCommand(
+                "owo",
+                "Owoify's your text",
+                Collections.singletonList(CommandsAPI.requiredMessageOption),
+                args -> {
+                    String msg = (String) args.get("message");
+                    if (msg == null) return new CommandsAPI.CommandResult(msg);
+                    StringBuilder newMsg = new StringBuilder(msg.trim());
+                    return new CommandsAPI.CommandResult(owoify(newMsg.toString()));
+                }
+        );
+
+        // spoilerfiles command
         patcher.patch("com.discord.widgets.chat.MessageManager$sendMessage$2", "invoke", (_this, args, ret) -> {
             markAttachmentsAsSpoiler = false;
             return ret;
@@ -80,6 +116,12 @@ public class MoreSlashCommands extends Plugin {
                     return new CommandsAPI.CommandResult(msg == null ? "" : msg);
                 }
         );
+    }
+
+    public String owoify(final String text) {
+        return text.replace("l", "w").replace("L", "W")
+                .replace("r", "w").replace("R", "W")
+                .replace("o", "u").replace("O", "U");
     }
 
     @Override
