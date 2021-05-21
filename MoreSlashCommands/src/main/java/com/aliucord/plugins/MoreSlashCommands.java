@@ -20,7 +20,7 @@ public class MoreSlashCommands extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Adds more slash commands.";
-        manifest.version = "0.0.2";
+        manifest.version = "0.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
