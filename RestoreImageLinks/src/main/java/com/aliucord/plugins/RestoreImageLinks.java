@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2021 Juby210
+ * Licensed under the Open Software License version 3.0
+ */
+
 // based on https://gitdab.com/distok/cutthecord/src/branch/master/patches/embedlinks/1387.patch
 
 package com.aliucord.plugins;
