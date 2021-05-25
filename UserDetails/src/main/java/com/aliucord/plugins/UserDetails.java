@@ -18,7 +18,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
-import com.aliucord.plugins.userdetails.PluginSettings;
+import com.aliucord.plugins.userdetails.*;
 import com.discord.api.channel.Channel;
 import com.discord.api.guildmember.GuildMember;
 import com.discord.databinding.UserProfileHeaderViewBinding;
@@ -46,16 +46,6 @@ import rx.Subscription;
 @SuppressLint("SetTextI18n")
 @SuppressWarnings({"unused"})
 public class UserDetails extends Plugin {
-    public static final class CachedData {
-        public long joinedAt;
-        public long lastMessage;
-
-        public CachedData(long j, long m) {
-            joinedAt = j;
-            lastMessage = m;
-        }
-    }
-
     public UserDetails() {
         settings = new Settings(PluginSettings.class, Settings.Type.BOTTOMSHEET);
     }
@@ -66,7 +56,7 @@ public class UserDetails extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -139,6 +129,9 @@ public class UserDetails extends Plugin {
 
     public void addDetails(UserProfileHeaderView _this, User user) throws Throwable {
         if (user == null) return;
+        boolean settingsHeader = _this.getId() == settingsHeaderId;
+        boolean displayCreatedAt = sets.getBool("createdAt", true);
+        if (settingsHeader && !displayCreatedAt) return;
         UserProfileHeaderViewBinding binding = (UserProfileHeaderViewBinding) Utils.getPrivateField(UserProfileHeaderView.class, _this, "binding");
         if (binding == null) return;
 
@@ -156,10 +149,11 @@ public class UserDetails extends Plugin {
         Long uId = user.getId();
         Clock clock = ClockFactory.get();
         StringBuilder text = new StringBuilder();
-        if (sets.getBool("createdAt", true)) {
+        if (displayCreatedAt) {
             text.append("Created at: ");
             text.append(TimeUtils.toReadableTimeString(context, SnowflakeUtils.toTimestamp(uId), clock));
         }
+        if (settingsHeader) return;
 
         long gId = StoreStream.getGuildSelected().getSelectedGuildId();
         boolean dm = gId == 0;
@@ -170,7 +164,7 @@ public class UserDetails extends Plugin {
                 if (text.length() > 0) text.append("\n");
                 text.append("Joined at: ");
                 text.append(TimeUtils.toReadableTimeString(context, guildCache.get(uId).joinedAt, clock));
-            } else if (_this.getId() != settingsHeaderId && lastRequestedMember != uId) {
+            } else if (lastRequestedMember != uId) {
                 lastRequestedMember = uId;
                 forceUpdate = () -> {
                     try {
@@ -193,7 +187,7 @@ public class UserDetails extends Plugin {
                 CachedData data;
                 if (cached != null && (data = cached.get(uId)) != null && data.lastMessage != 0) {
                     appendLastMessage(text, data.lastMessage == -1 ? "-" : TimeUtils.toReadableTimeString(context, cached.get(uId).lastMessage, clock));
-                } else if (_this.getId() != settingsHeaderId && lastRequestedSearch != uId) {
+                } else if (lastRequestedSearch != uId) {
                     lastRequestedSearch = uId;
                     forceUpdate = () -> {
                         try {

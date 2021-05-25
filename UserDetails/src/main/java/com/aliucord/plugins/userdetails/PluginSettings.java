@@ -23,7 +23,7 @@ import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
 import com.lytefast.flexinput.R$b;
 
-public class PluginSettings extends AppBottomSheet {
+public final class PluginSettings extends AppBottomSheet {
     public int getContentViewResId() { return 0; }
 
     @Override
