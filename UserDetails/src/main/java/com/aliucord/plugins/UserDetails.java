@@ -153,7 +153,10 @@ public class UserDetails extends Plugin {
             text.append("Created at: ");
             text.append(TimeUtils.toReadableTimeString(context, SnowflakeUtils.toTimestamp(uId), clock));
         }
-        if (settingsHeader) return;
+        if (settingsHeader) {
+            detailsView.setText(text);
+            return;
+        }
 
         long gId = StoreStream.getGuildSelected().getSelectedGuildId();
         boolean dm = gId == 0;
