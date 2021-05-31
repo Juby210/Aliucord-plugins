@@ -10,7 +10,6 @@ import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.MessageEmbed;
 import com.aliucord.plugins.Tags;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,9 +28,11 @@ public class AddCommand {
             if (tags.containsKey(name)) {
                 embed.setTitle("Tag already declared");
             } else {
-                embed.setTitle("Successfully created tag");
-                embed.setColor(0xFF00FF00);
-                embed.setFields(Arrays.asList(new MessageEmbed.Field("Name", name, false), new MessageEmbed.Field("Value", msg, false)));
+                embed
+                        .setTitle("Successfully created tag")
+                        .setColor(0xFF00FF00)
+                        .addField("Name", name, false)
+                        .addField("Value", msg, false);
                 tags.put(name, msg);
                 sets.setObject("tags", tags);
                 main.registerTag(name, msg);

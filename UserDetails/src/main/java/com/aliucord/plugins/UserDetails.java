@@ -56,7 +56,7 @@ public class UserDetails extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -74,9 +74,9 @@ public class UserDetails extends Plugin {
     public void start(Context ctx) {
         patcher.patch(storeGuildsClass, "handleGuildMember", (_this, args, ret) -> {
             GuildMember member = (GuildMember) args.get(0);
-            if (member.c() != null && member.i() != null) {
-                long id = member.i().f();
-                cacheData((Long) args.get(1), id, member.c().f(), 0);
+            if (member.d() != null && member.j() != null) {
+                long id = member.j().f();
+                cacheData((Long) args.get(1), id, member.d().f(), 0);
                 if (lastRequestedMember == id && forceUpdate != null) {
                     lastRequestedMember = 0;
                     new Handler(Looper.getMainLooper()).post(forceUpdate);

@@ -11,7 +11,6 @@ import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.MessageEmbed;
 import com.aliucord.plugins.Tags;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +24,11 @@ public class UpdateCommand {
         if (name == null || name.equals("") || msg == null || msg.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
-            embed.setTitle("Successfully updated tag");
-            embed.setColor(0xFF00FF00);
-            embed.setFields(Arrays.asList(new MessageEmbed.Field("Name", name, false), new MessageEmbed.Field("Value", msg, false)));
+            embed
+                    .setTitle("Successfully updated tag")
+                    .setColor(0xFF00FF00)
+                    .addField("Name", name, false)
+                    .addField("Value", msg, false);
             HashMap<String, String> tags = sets.getObject("tags", new HashMap<>(), Tags.tagsType);
             tags.put(name, msg);
             sets.setObject("tags", tags);

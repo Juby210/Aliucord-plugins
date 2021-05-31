@@ -30,7 +30,7 @@ public class SquareAvatars extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.7";
+        manifest.version = "0.0.8";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -39,7 +39,7 @@ public class SquareAvatars extends Plugin {
     private static final String avatarViewClass = "com.discord.views.user.UserAvatarPresenceView";
     public static Map<String, List<String>> getClassesToPatch() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put(className, Collections.singletonList("z2"));
+        map.put(className, Collections.singletonList("E2"));
         map.put(avatarViewClass, Collections.singletonList("setAvatarBackgroundColor"));
         return map;
     }
@@ -52,7 +52,7 @@ public class SquareAvatars extends Plugin {
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch(className, "z2", (_this, args, ret) -> {
+        patcher.patch(className, "E2", (_this, args, ret) -> {
             if (args.size() < 3) return ret;
             AttributeSet attrs = (AttributeSet) args.get(2);
             if (attrs == null) return ret;
@@ -82,7 +82,7 @@ public class SquareAvatars extends Plugin {
         });
 
         patcher.patch(avatarViewClass, "setAvatarBackgroundColor", (_this, args, ret) -> {
-            MGImages.setRoundingParams(((UserAvatarPresenceView) _this).h.b, _3dp, false, (Integer) args.get(0), null, null);
+            MGImages.setRoundingParams(((UserAvatarPresenceView) _this).i.b, _3dp, false, (Integer) args.get(0), null, null);
             return ret;
         });
     }
