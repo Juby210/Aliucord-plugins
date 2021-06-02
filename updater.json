@@ -21,6 +21,10 @@
     "NoGiftButton": {
         "version": "1.0.2"
     },
+    "PronounDB": {
+        "version": "1.0.1",
+        "minimumDiscordVersion": 79201
+    },
     "RemoveZoomLimit": {
         "version": "1.0.1",
         "minimumDiscordVersion": 1498
