@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DeleteCommand {
+public final class DeleteCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
         String name = (String) args.get("name");
 
@@ -32,6 +32,6 @@ public class DeleteCommand {
             CollectionUtils.removeIf(main.subcommands, option -> option.getName().equals(name));
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
     }
 }

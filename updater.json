@@ -33,7 +33,8 @@
         "version": "0.0.8"
     },
     "Tags": {
-        "version": "1.0.4"
+        "version": "1.0.5",
+        "minimumDiscordVersion": 79201
     },
     "UserDetails": {
         "version": "1.0.3"

@@ -13,7 +13,7 @@ import com.aliucord.plugins.Tags;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class ListCommand {
+public final class ListCommand {
     public static CommandsAPI.CommandResult execute(SettingsAPI sets) {
         HashMap<String, String> tags = sets.getObject("tags", null, Tags.tagsType);
 
@@ -30,6 +30,6 @@ public class ListCommand {
             embed.setDescription(description.toString());
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
     }
 }

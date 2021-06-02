@@ -37,6 +37,6 @@ public final class RenameCommand {
             main.registerTag(newName, msg);
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
     }
 }

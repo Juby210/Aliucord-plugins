@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UpdateCommand {
+public final class UpdateCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
         String name = (String) args.get("name");
         String msg = (String) args.get("message");
@@ -37,6 +37,6 @@ public class UpdateCommand {
             main.registerTag(name, msg);
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
     }
 }

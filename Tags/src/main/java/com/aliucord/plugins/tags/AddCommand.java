@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AddCommand {
+public final class AddCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
         String name = (String) args.get("name");
         if (name != null) name = name.replaceAll(" ", "");
@@ -39,6 +39,6 @@ public class AddCommand {
             }
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
     }
 }
