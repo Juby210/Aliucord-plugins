@@ -19,9 +19,14 @@ public final class Store {
     private static final List<Long> buffer = new ArrayList<>();
     private static Thread timerThread = new Thread(Store::runThread);
     public static void fetchPronouns(Long id) {
-        if (!timerThread.isAlive()) {
-            if (timerThread.getState() == Thread.State.TERMINATED) timerThread = new Thread(Store::runThread);
-            timerThread.start();
+        Thread.State state = timerThread.getState();
+        if (!timerThread.isAlive() && state != Thread.State.RUNNABLE) {
+            if (state == Thread.State.TERMINATED) timerThread = new Thread(Store::runThread);
+            try {
+                timerThread.start();
+            } catch (Throwable e) {
+                Main.logger.error("Failed to start timerThread, State: " + state, e);
+            }
         }
         if (!buffer.contains(id)) buffer.add(id);
         try {

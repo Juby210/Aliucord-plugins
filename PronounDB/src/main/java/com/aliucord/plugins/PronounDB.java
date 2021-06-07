@@ -51,7 +51,7 @@ public class PronounDB extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -108,7 +108,9 @@ public class PronounDB extends Plugin {
 
                 ModelMessage message = ((MessageEntry) args.get(1)).getMessage();
                 if (message == null) return ret;
-                Long userId = message.getAuthor().f();
+                com.discord.api.user.User user = message.getAuthor();
+                if (user.b() == Boolean.TRUE) return ret;
+                Long userId = user.f();
                 if (!Store.cache.containsKey(userId)) {
                     TextView finalPronounsView = pronounsView;
                     new Thread(() -> {
