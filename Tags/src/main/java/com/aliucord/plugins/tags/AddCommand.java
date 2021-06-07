@@ -7,7 +7,7 @@ package com.aliucord.plugins.tags;
 
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.api.SettingsAPI;
-import com.aliucord.entities.MessageEmbed;
+import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.plugins.Tags;
 
 import java.util.Collections;
@@ -20,7 +20,7 @@ public final class AddCommand {
         if (name != null) name = name.replaceAll(" ", "");
         String msg = (String) args.get("message");
 
-        MessageEmbed embed = new MessageEmbed();
+        MessageEmbedBuilder embed = new MessageEmbedBuilder();
         if (name == null || name.equals("") || msg == null || msg.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
@@ -39,6 +39,6 @@ public final class AddCommand {
             }
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.build()), false);
     }
 }

@@ -36,7 +36,7 @@ public class Tags extends Plugin {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "ConstantConditions" })
     public void start(Context context) {
         existingTags = new ArrayList<>();
         subcommands = new ArrayList<>();

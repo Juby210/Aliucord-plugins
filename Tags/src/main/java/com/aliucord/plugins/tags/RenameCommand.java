@@ -8,7 +8,7 @@ package com.aliucord.plugins.tags;
 import com.aliucord.CollectionUtils;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.api.SettingsAPI;
-import com.aliucord.entities.MessageEmbed;
+import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.plugins.Tags;
 
 import java.util.Collections;
@@ -21,7 +21,7 @@ public final class RenameCommand {
         String newName = (String) args.get("newName");
         if (newName != null) newName = newName.replaceAll(" ", "");
 
-        MessageEmbed embed = new MessageEmbed();
+        MessageEmbedBuilder embed = new MessageEmbedBuilder();
         if (name == null || name.equals("") || newName == null || newName.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
@@ -37,6 +37,6 @@ public final class RenameCommand {
             main.registerTag(newName, msg);
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.build()), false);
     }
 }

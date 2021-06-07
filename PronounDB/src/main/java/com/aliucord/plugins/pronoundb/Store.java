@@ -7,7 +7,6 @@ package com.aliucord.plugins.pronoundb;
 
 import com.aliucord.Http;
 import com.aliucord.Main;
-import com.aliucord.Utils;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -35,7 +34,7 @@ public final class Store {
             Thread.sleep(50);
             Long[] bufferCopy = buffer.toArray(new Long[0]);
             buffer.clear();
-            Map<Long, String> res = Utils.fromJson(Http.simpleGet(Constants.Endpoints.LOOKUP_BULK(bufferCopy)), resType);
+            Map<Long, String> res = Http.simpleJsonGet(Constants.Endpoints.LOOKUP_BULK(bufferCopy), resType);
             cache.putAll(res);
             for (Long id : bufferCopy) {
                 if (!cache.containsKey(id)) cache.put(id, "unspecified");

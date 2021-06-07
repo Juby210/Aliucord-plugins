@@ -7,7 +7,7 @@ package com.aliucord.plugins.tags;
 
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.api.SettingsAPI;
-import com.aliucord.entities.MessageEmbed;
+import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.plugins.Tags;
 
 import java.util.Collections;
@@ -17,7 +17,7 @@ public final class ListCommand {
     public static CommandsAPI.CommandResult execute(SettingsAPI sets) {
         HashMap<String, String> tags = sets.getObject("tags", null, Tags.tagsType);
 
-        MessageEmbed embed = new MessageEmbed();
+        MessageEmbedBuilder embed = new MessageEmbedBuilder();
         if (tags == null || tags.size() == 0) embed.setTitle("You don't have any tags declared");
         else {
             int size = tags.size();
@@ -30,6 +30,6 @@ public final class ListCommand {
             embed.setDescription(description.toString());
         }
 
-        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.embed), false);
+        return new CommandsAPI.CommandResult(null, Collections.singletonList(embed.build()), false);
     }
 }

@@ -29,6 +29,7 @@ import com.lytefast.flexinput.R$h;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressLint("SetTextI18n")
 public final class PluginSettings extends SettingsPage {
@@ -46,7 +47,7 @@ public final class PluginSettings extends SettingsPage {
     public void onViewBound(View view) {
         super.onViewBound(view);
 
-        SettingsAPI sets = PluginManager.plugins.get(plugin).sets;
+        SettingsAPI sets = Objects.requireNonNull(PluginManager.plugins.get(plugin)).sets;
         Context context = view.getContext();
         LinearLayout layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
 
