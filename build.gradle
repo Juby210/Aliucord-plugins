@@ -13,6 +13,7 @@ buildscript {
 }
 
 ext {
+    minSdkVer = 24
     sdkVer = 30
 
     appCompatVer = "1.2.0"
