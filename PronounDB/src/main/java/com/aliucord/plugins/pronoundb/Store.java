@@ -19,7 +19,7 @@ public final class Store {
     private static final List<Long> buffer = new ArrayList<>();
     private static Thread timerThread = new Thread(Store::runThread);
     public static void fetchPronouns(Long id) {
-        Thread.State state = timerThread.getState();
+        var state = timerThread.getState();
         if (!timerThread.isAlive() && state != Thread.State.RUNNABLE) {
             if (state == Thread.State.TERMINATED) timerThread = new Thread(Store::runThread);
             try {
@@ -37,11 +37,11 @@ public final class Store {
     private static void runThread() {
         try {
             Thread.sleep(50);
-            Long[] bufferCopy = buffer.toArray(new Long[0]);
+            var bufferCopy = buffer.toArray(new Long[0]);
             buffer.clear();
             Map<Long, String> res = Http.simpleJsonGet(Constants.Endpoints.LOOKUP_BULK(bufferCopy), resType);
             cache.putAll(res);
-            for (Long id : bufferCopy) {
+            for (var id : bufferCopy) {
                 if (!cache.containsKey(id)) cache.put(id, "unspecified");
             }
         } catch (Throwable e) {

@@ -22,7 +22,7 @@
         "version": "1.0.2"
     },
     "PronounDB": {
-        "version": "1.0.2",
+        "version": "1.0.3",
         "minimumDiscordVersion": 79201
     },
     "RemoveZoomLimit": {

@@ -16,7 +16,7 @@ public final class Constants {
         public static String LOOKUP_BULK(Object[] ids) { return WEBSITE + "/api/v1/lookup-bulk?platform=discord&ids=" + TextUtils.join(",", ids); }
     }
 
-    private static final Map<String, List<String>> pronouns = new HashMap<String, List<String>>(){{
+    private static final Map<String, List<String>> pronouns = new HashMap<>() {{
         put("hh", Arrays.asList("he/him", "He/Him"));
         put("hi", Arrays.asList("he/it", "He/It"));
         put("hs", Arrays.asList("he/she", "He/She"));
@@ -40,7 +40,7 @@ public final class Constants {
         put("avoid", Collections.singletonList("Avoid pronouns, use my name"));
     }};
     public static String getPronouns(String p, int format) {
-        List<String> list = pronouns.get(p);
+        var list = pronouns.get(p);
         if (list == null) return null;
         return list.size() > format ? list.get(format) : list.get(0);
     }
