@@ -4,7 +4,6 @@ plugins {
 
 android {
     compileSdkVersion sdkVer
-    buildToolsVersion buildToolsVer
 
     defaultConfig {
         minSdkVersion 21
@@ -19,14 +18,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
 
 dependencies {
     implementation "androidx.appcompat:appcompat:$appCompatVer"
-    implementation "com.google.android.material:material:$materialVer"
 
     implementation project(':Aliucord')
 }
