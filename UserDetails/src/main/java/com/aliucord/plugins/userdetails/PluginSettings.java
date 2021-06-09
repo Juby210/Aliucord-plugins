@@ -23,14 +23,16 @@ import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
 import com.lytefast.flexinput.R$b;
 
+import java.util.Objects;
+
 public final class PluginSettings extends AppBottomSheet {
     public int getContentViewResId() { return 0; }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        SettingsAPI sets = PluginManager.plugins.get("UserDetails").sets;
-        Context context = inflater.getContext();
-        LinearLayout layout = new LinearLayout(context);
+        var sets = Objects.requireNonNull(PluginManager.plugins.get("UserDetails")).sets;
+        var context = inflater.getContext();
+        var layout = new LinearLayout(context);
         layout.setBackgroundColor(ColorCompat.getThemedColor(context, R$b.colorBackgroundPrimary));
 
         layout.addView(createSwitch(context, sets, "createdAt", "Display \"Created at\""));
@@ -40,7 +42,7 @@ public final class PluginSettings extends AppBottomSheet {
     }
 
     private CheckedSetting createSwitch(Context context, SettingsAPI sets, String key, String label) {
-        CheckedSetting cs = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, label, null);
+        var cs = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, label, null);
         cs.setChecked(sets.getBool(key, true));
         cs.setOnCheckedListener(c -> sets.setBool(key, c));
         return cs;

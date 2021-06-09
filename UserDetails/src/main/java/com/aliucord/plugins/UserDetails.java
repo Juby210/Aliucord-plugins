@@ -18,20 +18,19 @@ import androidx.core.content.res.ResourcesCompat;
 
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.userdetails.*;
+import com.aliucord.utils.ReflectUtils;
+import com.aliucord.utils.RxUtils;
 import com.discord.api.channel.Channel;
 import com.discord.api.guildmember.GuildMember;
 import com.discord.databinding.UserProfileHeaderViewBinding;
-import com.discord.models.domain.ModelMessage;
 import com.discord.models.user.User;
-import com.discord.stores.StoreSearch;
-import com.discord.stores.StoreSearchQuery;
-import com.discord.stores.StoreStream;
+import com.discord.stores.*;
 import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.search.network.SearchFetcher;
 import com.discord.utilities.search.network.SearchQuery;
-import com.discord.utilities.time.Clock;
 import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
 import com.discord.widgets.user.profile.UserProfileHeaderView;
@@ -53,50 +52,39 @@ public class UserDetails extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
-    private static final String storeGuildsClass = "com.discord.stores.StoreGuilds";
-    private static final String userProfileHeaderClass = "com.discord.widgets.user.profile.UserProfileHeaderView";
-    public static Map<String, List<String>> getClassesToPatch() {
-        Map<String, List<String>> map = new HashMap<>();
-        map.put(storeGuildsClass, Collections.singletonList("handleGuildMember"));
-        map.put(userProfileHeaderClass, Collections.singletonList("updateViewState"));
-        return map;
-    }
-
     @Override
     public void start(Context ctx) {
-        patcher.patch(storeGuildsClass, "handleGuildMember", (_this, args, ret) -> {
-            GuildMember member = (GuildMember) args.get(0);
+        patcher.patch(StoreGuilds.class, "handleGuildMember", new Class<?>[]{ GuildMember.class, long.class }, new PinePatchFn(callFrame -> {
+            var member = (GuildMember) callFrame.args[0];
             if (member.d() != null && member.j() != null) {
-                long id = member.j().f();
-                cacheData((Long) args.get(1), id, member.d().f(), 0);
+                var id = member.j().i();
+                cacheData((Long) callFrame.args[1], id, member.d().f(), 0);
                 if (lastRequestedMember == id && forceUpdate != null) {
                     lastRequestedMember = 0;
-                    new Handler(Looper.getMainLooper()).post(forceUpdate);
+                    Utils.mainThread.post(forceUpdate);
                 }
             }
-            return ret;
-        });
-
-        subscription = StoreStream.getGatewaySocket().getMessageCreate().I().T(Utils.createActionSubscriber(message -> {
-            if (message == null) return;
-            Long guildId = message.getGuildId();
-            cacheData(guildId == null ? message.getChannelId() : guildId, message.getAuthor().f(), 0, SnowflakeUtils.toTimestamp(message.getId()));
         }));
 
-        patcher.patch(userProfileHeaderClass, "updateViewState", (_this, args, ret) -> {
+        subscription = RxUtils.subscribe(RxUtils.onBackpressureBuffer(StoreStream.getGatewaySocket().getMessageCreate()), RxUtils.createActionSubscriber(message -> {
+            if (message == null) return;
+            var guildId = message.getGuildId();
+            cacheData(guildId == null ? message.getChannelId() : guildId, message.getAuthor().i(), 0, SnowflakeUtils.toTimestamp(message.getId()));
+        }));
+
+        patcher.patch(UserProfileHeaderView.class, "updateViewState", new Class<?>[]{ UserProfileHeaderViewModel.ViewState.Loaded.class }, new PinePatchFn(callFrame -> {
             try {
-                addDetails((UserProfileHeaderView) _this, ((UserProfileHeaderViewModel.ViewState.Loaded) args.get(0)).getUser());
+                addDetails((UserProfileHeaderView) callFrame.thisObject, ((UserProfileHeaderViewModel.ViewState.Loaded) callFrame.args[0]).getUser());
             } catch (Throwable e) { Main.logger.error(e); }
-            return ret;
-        });
+        }));
     }
 
     @Override
@@ -119,9 +107,9 @@ public class UserDetails extends Plugin {
 
     public void cacheData(Long guildId, Long id, long joinedAt, long lastMessage) {
         if (!cache.containsKey(guildId)) cache.put(guildId, new HashMap<>());
-        Map<Long, CachedData> guildCache = cache.get(guildId);
+        var guildCache = cache.get(guildId);
         if (guildCache.containsKey(id)) {
-            CachedData cachedData = guildCache.get(id);
+            var cachedData = guildCache.get(id);
             if (joinedAt != 0) cachedData.joinedAt = joinedAt;
             if (lastMessage != 0) cachedData.lastMessage = lastMessage;
         } else guildCache.put(id, new CachedData(joinedAt, lastMessage));
@@ -129,26 +117,26 @@ public class UserDetails extends Plugin {
 
     public void addDetails(UserProfileHeaderView _this, User user) throws Throwable {
         if (user == null) return;
-        boolean settingsHeader = _this.getId() == settingsHeaderId;
-        boolean displayCreatedAt = sets.getBool("createdAt", true);
+        var settingsHeader = _this.getId() == settingsHeaderId;
+        var displayCreatedAt = sets.getBool("createdAt", true);
         if (settingsHeader && !displayCreatedAt) return;
-        UserProfileHeaderViewBinding binding = (UserProfileHeaderViewBinding) Utils.getPrivateField(UserProfileHeaderView.class, _this, "binding");
+        var binding = (UserProfileHeaderViewBinding) ReflectUtils.getField(UserProfileHeaderView.class, _this, "binding", true);
         if (binding == null) return;
 
-        LinearLayout layout = (LinearLayout) binding.d.getParent();
-        Context context = layout.getContext();
+        var layout = (LinearLayout) binding.f.getParent();
+        var context = layout.getContext();
         TextView detailsView = layout.findViewById(viewId);
         if (detailsView == null) {
             detailsView = new TextView(context, null, 0, R$h.UiKit_TextView_Semibold);
             detailsView.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
             detailsView.setTextColor(ColorCompat.getThemedColor(context, R$b.colorTextMuted));
             detailsView.setId(viewId);
-            layout.addView(detailsView, layout.indexOfChild(binding.d));
+            layout.addView(detailsView, layout.indexOfChild(binding.f));
         }
 
-        Long uId = user.getId();
-        Clock clock = ClockFactory.get();
-        StringBuilder text = new StringBuilder();
+        var uId = user.getId();
+        var clock = ClockFactory.get();
+        var text = new StringBuilder();
         if (displayCreatedAt) {
             text.append("Created at: ");
             text.append(TimeUtils.toReadableTimeString(context, SnowflakeUtils.toTimestamp(uId), clock));
@@ -158,15 +146,15 @@ public class UserDetails extends Plugin {
             return;
         }
 
-        long gId = StoreStream.getGuildSelected().getSelectedGuildId();
-        boolean dm = gId == 0;
+        var gId = StoreStream.getGuildSelected().getSelectedGuildId();
+        var dm = gId == 0;
         if (sets.getBool("joinedAt", true) && !dm) {
             Map<Long, CachedData> guildCache;
             CachedData data;
             if ((guildCache = cache.get(gId)) != null && (data = guildCache.get(uId)) != null && data.joinedAt != 0) {
                 if (text.length() > 0) text.append("\n");
                 text.append("Joined at: ");
-                text.append(TimeUtils.toReadableTimeString(context, guildCache.get(uId).joinedAt, clock));
+                text.append(TimeUtils.toReadableTimeString(context, data.joinedAt, clock));
             } else if (lastRequestedMember != uId) {
                 lastRequestedMember = uId;
                 forceUpdate = () -> {
@@ -180,16 +168,16 @@ public class UserDetails extends Plugin {
         }
 
         if (sets.getBool("lastMessage", true)) {
-            long cId = StoreStream.getChannelsSelected().getId();
+            var cId = StoreStream.getChannelsSelected().getId();
             Channel channel;
-            boolean dontFetchLast = dm && (cId < 1 || StoreStream.getUsers().getMe().getId() != uId &&
-                    ((channel = StoreStream.getChannels().getChannel(cId)) == null || CollectionUtils.findIndex(channel.v(), u -> u.f() == uId) == -1));
-            if (dontFetchLast) appendLastMessage(text, "=");
+            var dontFetchLast = dm && (cId < 1 || StoreStream.getUsers().getMe().getId() != uId &&
+                ((channel = StoreStream.getChannels().getChannel(cId)) == null || CollectionUtils.findIndex(channel.v(), u -> u.i() == uId) == -1));
+            if (dontFetchLast) appendLastMessage(text, "-");
             else {
-                Map<Long, CachedData> cached = cache.get(dm ? cId : gId);
+                var cached = cache.get(dm ? cId : gId);
                 CachedData data;
                 if (cached != null && (data = cached.get(uId)) != null && data.lastMessage != 0) {
-                    appendLastMessage(text, data.lastMessage == -1 ? "-" : TimeUtils.toReadableTimeString(context, cached.get(uId).lastMessage, clock));
+                    appendLastMessage(text, data.lastMessage == -1 ? "-" : TimeUtils.toReadableTimeString(context, data.lastMessage, clock));
                 } else if (lastRequestedSearch != uId) {
                     lastRequestedSearch = uId;
                     forceUpdate = () -> {
@@ -213,19 +201,19 @@ public class UserDetails extends Plugin {
 
     private void search(Long authorId, long id, boolean dm) throws Throwable {
         if (searchSubscription != null) searchSubscription.unsubscribe();
-        SearchFetcher searchFetcher = (SearchFetcher) Utils.getPrivateField(StoreSearchQuery.class, StoreStream.getSearch().getStoreSearchQuery(), "searchFetcher");
-        Map<String, List<String>> params = new HashMap<>();
+        var searchFetcher = (SearchFetcher) ReflectUtils.getField(StoreStream.getSearch().getStoreSearchQuery(), "searchFetcher", true);
+        var params = new HashMap<String, List<String>>();
         params.put("author_id", Collections.singletonList(authorId.toString()));
-        searchSubscription = searchFetcher.makeQuery(
-                new StoreSearch.SearchTarget(dm ? StoreSearch.SearchTarget.Type.CHANNEL : StoreSearch.SearchTarget.Type.GUILD, id),
-                null,
-                new SearchQuery(params, true)
-        ).T(Utils.createActionSubscriber(res -> {
+        searchSubscription = RxUtils.subscribe(searchFetcher.makeQuery(
+            new StoreSearch.SearchTarget(dm ? StoreSearch.SearchTarget.Type.CHANNEL : StoreSearch.SearchTarget.Type.GUILD, id),
+            null,
+            new SearchQuery(params, true)
+        ), RxUtils.createActionSubscriber(res -> {
             if (res == null || res.getErrorCode() != null) return;
             if (res.getTotalResults() == 0) {
                 cacheData(id, authorId, 0, -1);
             } else if (res.getHits() != null) {
-                ModelMessage hit = res.getHits().get(0);
+                var hit = res.getHits().get(0);
                 cacheData(id, authorId, 0, SnowflakeUtils.toTimestamp(hit.getId()));
             } else return;
             if (lastRequestedSearch == authorId && forceUpdate != null) {

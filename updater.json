@@ -22,25 +22,28 @@
         "version": "1.0.2"
     },
     "PronounDB": {
-        "version": "1.0.3",
-        "minimumDiscordVersion": 79201
+        "version": "1.0.4",
+        "minimumDiscordVersion": 80202
     },
     "RemoveZoomLimit": {
         "version": "1.0.1",
         "minimumDiscordVersion": 1498
     },
     "SquareAvatars": {
-        "version": "0.0.8"
+        "version": "0.0.9",
+        "minimumDiscordVersion": 80202
     },
     "Tags": {
         "version": "1.0.5",
         "minimumDiscordVersion": 79201
     },
     "UserDetails": {
-        "version": "1.0.3"
+        "version": "1.0.4",
+        "minimumDiscordVersion": 80202
     },
     "ViewRaw": {
-        "version": "1.0.1"
+        "version": "1.0.2",
+        "minimumDiscordVersion": 80202
     },
     "default": {
         "minimumDiscordVersion": 78204,

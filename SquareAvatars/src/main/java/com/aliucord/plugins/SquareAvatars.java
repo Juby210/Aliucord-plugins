@@ -12,63 +12,55 @@ import androidx.annotation.NonNull;
 
 import com.aliucord.Constants;
 import com.aliucord.Logger;
+import com.aliucord.Main;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.discord.utilities.images.MGImages;
 import com.discord.views.user.UserAvatarPresenceView;
 
 import java.util.*;
 
 import c.f.g.f.a;
-import c.f.g.f.c;
+import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class SquareAvatars extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.8";
+        manifest.version = "0.0.9";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
-    private static final String className = "com.airbnb.lottie.parser.AnimatableValueParser";
-    private static final String avatarViewClass = "com.discord.views.user.UserAvatarPresenceView";
-    public static Map<String, List<String>> getClassesToPatch() {
-        Map<String, List<String>> map = new HashMap<>();
-        map.put(className, Collections.singletonList("E2"));
-        map.put(avatarViewClass, Collections.singletonList("setAvatarBackgroundColor"));
-        return map;
-    }
-
     @Override
-    public void start(Context ctx) {
-        Logger logger = new Logger("SquareAvatars");
+    public void start(Context ctx) throws Throwable {
+        var logger = new Logger("SquareAvatars");
 
         float _3dp = Utils.dpToPx(3);
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch(className, "E2", (_this, args, ret) -> {
-            if (args.size() < 3) return ret;
-            AttributeSet attrs = (AttributeSet) args.get(2);
-            if (attrs == null) return ret;
+        patcher.patch("com.airbnb.lottie.parser.AnimatableValueParser", "I2", new Class<?>[]{ a.class, Context.class, AttributeSet.class }, new PinePatchFn(callFrame -> {
+            var attrs = (AttributeSet) callFrame.args[2];
+            if (attrs == null) return;
 
             try {
-                a builder = (a) ret;
-                c roundingParams = builder.r;
+                var builder = (a) callFrame.getResult();
+                var roundingParams = builder.r;
 
                 if (roundingParams != null && roundingParams.b) {
-                    Context context = (Context) args.get(1);
-                    int id = attrs.getAttributeResourceValue(Constants.NAMESPACE_ANDROID, "id", 0);
+                    var context = (Context) callFrame.args[1];
+                    var id = attrs.getAttributeResourceValue(Constants.NAMESPACE_ANDROID, "id", 0);
                     if (id != 0 && contains(context.getResources().getResourceName(id))) {
                         roundingParams.b = false;
 
                         // round corners
-                        float[] radii = roundingParams.c;
+                        var radii = roundingParams.c;
                         if (radii == null) {
                             radii = new float[8];
                             roundingParams.c = radii;
@@ -76,15 +68,8 @@ public class SquareAvatars extends Plugin {
                         Arrays.fill(radii, _3dp);
                     }
                 }
-            } catch (Exception e) { logger.error(e); }
-
-            return ret;
-        });
-
-        patcher.patch(avatarViewClass, "setAvatarBackgroundColor", (_this, args, ret) -> {
-            MGImages.setRoundingParams(((UserAvatarPresenceView) _this).i.b, _3dp, false, (Integer) args.get(0), null, null);
-            return ret;
-        });
+            } catch (Throwable e) { logger.error(e); }
+        }));
     }
 
     @Override
