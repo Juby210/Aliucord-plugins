@@ -17,14 +17,15 @@ import java.util.Map;
 
 public final class DeleteCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
-        String name = (String) args.get("name");
+        var name = (String) args.get("name");
 
-        MessageEmbedBuilder embed = new MessageEmbedBuilder();
+        var embed = new MessageEmbedBuilder();
         if (name == null || name.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
-            embed.setTitle("Successfully deleted tag");
-            embed.setColor(0xFF00FF00);
+            embed
+                .setTitle("Successfully deleted tag")
+                .setColor(0xFF00FF00);
             HashMap<String, String> tags = sets.getObject("tags", new HashMap<>(), Tags.tagsType);
             tags.remove(name);
             sets.setObject("tags", tags);

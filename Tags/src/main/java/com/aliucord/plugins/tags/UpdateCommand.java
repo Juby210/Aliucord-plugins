@@ -17,18 +17,18 @@ import java.util.Map;
 
 public final class UpdateCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
-        String name = (String) args.get("name");
-        String msg = (String) args.get("message");
+        var name = (String) args.get("name");
+        var msg = (String) args.get("message");
 
-        MessageEmbedBuilder embed = new MessageEmbedBuilder();
+        var embed = new MessageEmbedBuilder();
         if (name == null || name.equals("") || msg == null || msg.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
             embed
-                    .setTitle("Successfully updated tag")
-                    .setColor(0xFF00FF00)
-                    .addField("Name", name, false)
-                    .addField("Value", msg, false);
+                .setTitle("Successfully updated tag")
+                .setColor(0xFF00FF00)
+                .addField("Name", name, false)
+                .addField("Value", msg, false);
             HashMap<String, String> tags = sets.getObject("tags", new HashMap<>(), Tags.tagsType);
             tags.put(name, msg);
             sets.setObject("tags", tags);

@@ -16,11 +16,11 @@ import java.util.Map;
 
 public final class AddCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
-        String name = (String) args.get("name");
+        var name = (String) args.get("name");
         if (name != null) name = name.replaceAll(" ", "");
-        String msg = (String) args.get("message");
+        var msg = (String) args.get("message");
 
-        MessageEmbedBuilder embed = new MessageEmbedBuilder();
+        var embed = new MessageEmbedBuilder();
         if (name == null || name.equals("") || msg == null || msg.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
@@ -29,10 +29,10 @@ public final class AddCommand {
                 embed.setTitle("Tag already declared");
             } else {
                 embed
-                        .setTitle("Successfully created tag")
-                        .setColor(0xFF00FF00)
-                        .addField("Name", name, false)
-                        .addField("Value", msg, false);
+                    .setTitle("Successfully created tag")
+                    .setColor(0xFF00FF00)
+                    .addField("Name", name, false)
+                    .addField("Value", msg, false);
                 tags.put(name, msg);
                 sets.setObject("tags", tags);
                 main.registerTag(name, msg);

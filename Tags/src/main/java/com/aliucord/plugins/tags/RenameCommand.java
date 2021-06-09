@@ -17,18 +17,19 @@ import java.util.Map;
 
 public final class RenameCommand {
     public static CommandsAPI.CommandResult execute(Map<String, ?> args, SettingsAPI sets, Tags main) {
-        String name = (String) args.get("name");
-        String newName = (String) args.get("newName");
+        var name = (String) args.get("name");
+        var newName = (String) args.get("newName");
         if (newName != null) newName = newName.replaceAll(" ", "");
 
-        MessageEmbedBuilder embed = new MessageEmbedBuilder();
+        var embed = new MessageEmbedBuilder();
         if (name == null || name.equals("") || newName == null || newName.equals("")) {
             embed.setTitle("Missing required arguments");
         } else {
-            embed.setTitle("Successfully renamed tag");
-            embed.setColor(0xFF00FF00);
+            embed
+                .setTitle("Successfully renamed tag")
+                .setColor(0xFF00FF00);
             HashMap<String, String> tags = sets.getObject("tags", new HashMap<>(), Tags.tagsType);
-            String msg = tags.get(name);
+            var msg = tags.get(name);
             tags.put(newName, msg);
             tags.remove(name);
             sets.setObject("tags", tags);

@@ -17,12 +17,12 @@ public final class ListCommand {
     public static CommandsAPI.CommandResult execute(SettingsAPI sets) {
         HashMap<String, String> tags = sets.getObject("tags", null, Tags.tagsType);
 
-        MessageEmbedBuilder embed = new MessageEmbedBuilder();
+        var embed = new MessageEmbedBuilder();
         if (tags == null || tags.size() == 0) embed.setTitle("You don't have any tags declared");
         else {
-            int size = tags.size();
+            var size = tags.size();
             embed.setTitle("You have " + size + " tag" + (size == 1 ? "" : "s") + " available:");
-            StringBuilder description = new StringBuilder();
+            var description = new StringBuilder();
             for (String tag : tags.keySet()) {
                 if (description.length() > 0) description.append("\n");
                 description.append("- ").append(tag);
