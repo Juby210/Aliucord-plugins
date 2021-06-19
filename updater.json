@@ -1,52 +1,49 @@
 {
-    "CustomTimestamps": {
-        "version": "1.0.2"
-    },
-    "Experiments": {
-        "version": "1.0.2"
-    },
-    "HideDisabledEmojis": {
+    "CustomNicknameFormat": {
         "version": "1.0.1"
     },
-    "MoreSlashCommands": {
-        "version": "0.0.3"
+    "CustomTimestamps": {
+        "version": "1.0.3"
     },
-    "NoAutoReplyMention": {
-        "version": "0.0.1"
+    "Experiments": {
+        "version": "1.0.3"
     },
-    "NoCopyEmbeds": {
-        "version": "1.0.1",
-        "minimumDiscordVersion": 1498
-    },
-    "NoGiftButton": {
+    "HideDisabledEmojis": {
         "version": "1.0.2"
     },
+    "MoreSlashCommands": {
+        "version": "0.0.4"
+    },
+    "NoAutoReplyMention": {
+        "version": "0.0.2"
+    },
+    "NoCopyEmbeds": {
+        "version": "1.0.2"
+    },
+    "NoGiftButton": {
+        "version": "1.0.3"
+    },
     "PronounDB": {
-        "version": "1.0.4",
-        "minimumDiscordVersion": 80202
+        "version": "1.0.4"
     },
     "RemoveZoomLimit": {
-        "version": "1.0.1",
-        "minimumDiscordVersion": 1498
+        "version": "1.0.2"
     },
     "SquareAvatars": {
-        "version": "0.0.9",
-        "minimumDiscordVersion": 80202
+        "version": "0.0.9"
     },
     "Tags": {
         "version": "1.0.6",
         "minimumDiscordVersion": 79201
     },
     "UserDetails": {
-        "version": "1.0.4",
-        "minimumDiscordVersion": 80202
+        "version": "1.0.4"
     },
     "ViewRaw": {
-        "version": "1.0.2",
-        "minimumDiscordVersion": 80202
+        "version": "1.0.2"
     },
     "default": {
-        "minimumDiscordVersion": 78204,
+        "minimumDiscordVersion": 80202,
         "version": "1.0.0",
         "build": "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/%s.zip"
     }

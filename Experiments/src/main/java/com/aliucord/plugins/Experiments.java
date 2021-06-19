@@ -12,56 +12,43 @@ import androidx.annotation.NonNull;
 
 import com.aliucord.Main;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PrePatchFunction;
-import com.aliucord.patcher.PrePatchRes;
+import com.aliucord.patcher.PinePatchFn;
 import com.discord.databinding.WidgetSettingsBinding;
 import com.discord.widgets.settings.WidgetSettings;
+import com.discord.widgets.settings.WidgetSettings$Model;
 
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class Experiments extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Shows hidden Developer Options tab with Experiments.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
-    public static Map<String, List<String>> getClassesToPatch() {
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("com.discord.stores.StoreExperiments$getExperimentalAlpha$1", Collections.singletonList("*"));
-        map.put("com.discord.widgets.settings.WidgetSettings", Collections.singletonList("configureUI"));
-        return map;
-    }
 
     @Override
-    public void start(Context context) {
-        PrePatchFunction patch = (_this, args) -> new PrePatchRes(true);
-        patcher.prePatch("com.discord.stores.StoreExperiments$getExperimentalAlpha$1", "invoke", patch);
+    public void start(Context context) throws Throwable {
+        patcher.patch("com.discord.stores.StoreExperiments$getExperimentalAlpha$1", "invoke", new Class<?>[0], MethodReplacement.returnConstant(true));
 
-        try {
-            Method getBinding = WidgetSettings.class.getDeclaredMethod("getBinding");
-            getBinding.setAccessible(true);
+        var settingsClass = WidgetSettings.class;
+        var getBinding = settingsClass.getDeclaredMethod("getBinding");
+        getBinding.setAccessible(true);
 
-            patcher.patch("com.discord.widgets.settings.WidgetSettings", "configureUI", (_this, args, ret) -> {
-                try {
-                    WidgetSettingsBinding binding = (WidgetSettingsBinding) getBinding.invoke(_this);
-                    if (binding == null) return ret;
-                    binding.n.setVisibility(View.VISIBLE);
-                    binding.o.setVisibility(View.VISIBLE);
-                    binding.m.setVisibility(View.VISIBLE);
-                } catch (Throwable e) { Main.logger.error(e); }
-                return ret;
-            });
-        } catch (Throwable e) { Main.logger.error(e); }
+        patcher.patch(settingsClass, "configureUI", new Class<?>[]{ WidgetSettings$Model.class }, new PinePatchFn(callFrame -> {
+            try {
+                var binding = (WidgetSettingsBinding) getBinding.invoke(callFrame.thisObject);
+                if (binding == null) return;
+                binding.n.setVisibility(View.VISIBLE);
+                binding.o.setVisibility(View.VISIBLE);
+                binding.m.setVisibility(View.VISIBLE);
+            } catch (Throwable e) { Main.logger.error(e); }
+        }));
     }
 
     @Override

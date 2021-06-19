@@ -12,35 +12,28 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PrePatchRes;
+import com.discord.utilities.textprocessing.MessagePreprocessor;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+
+import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class RestoreImageLinks extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Restores image links in chat.";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
-    }
-    public static Map<String, List<String>> getClassesToPatch() {
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("com.discord.utilities.textprocessing.MessagePreprocessor", Collections.singletonList("stripSimpleEmbedLink"));
-        return map;
     }
 
     @Override
     public void start(Context context) {
-        patcher.prePatch("com.discord.utilities.textprocessing.MessagePreprocessor", "stripSimpleEmbedLink",
-                (_this, args) -> new PrePatchRes(null));
+        patcher.patch(MessagePreprocessor.class, "stripSimpleEmbedLink", new Class<?>[]{ Collection.class }, MethodReplacement.DO_NOTHING);
     }
 
     @Override

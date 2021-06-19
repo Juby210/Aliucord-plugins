@@ -11,42 +11,32 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.lytefast.flexinput.fragment.FlexInputFragment;
 
-import java.util.*;
-
-import c.b.a.e.a;
-
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "ConstantConditions"})
 public class NoGiftButton extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Hides useless gift button.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
-    }
-    public static Map<String, List<String>> getClassesToPatch() {
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("com.lytefast.flexinput.fragment.FlexInputFragment$d", Collections.singletonList("invoke"));
-        return map;
     }
 
     @Override
     public void start(Context context) {
-        patcher.patch("com.lytefast.flexinput.fragment.FlexInputFragment$d", "invoke", (_this, args, ret) -> {
-            FlexInputFragment fragment = (FlexInputFragment) ((FlexInputFragment.d) _this).receiver;
-            a widgetBinding = fragment.j();
-            if (widgetBinding != null) {
-                widgetBinding.h.setVisibility(View.GONE); // hide expand button
-                widgetBinding.n.setVisibility(View.GONE); // hide gift button
-                widgetBinding.m.setVisibility(View.VISIBLE); // show gallery button
-            }
-            return ret;
-        });
+        patcher.patch(FlexInputFragment.d.class, "invoke", new Class<?>[]{ Object.class }, new PinePatchFn(callFrame -> {
+            var fragment = (FlexInputFragment) ((FlexInputFragment.d) callFrame.thisObject).receiver;
+            var binding = fragment.j();
+            if (binding == null) return;
+            binding.h.setVisibility(View.GONE); // hide expand button
+            binding.n.setVisibility(View.GONE); // hide gift button
+            binding.m.setVisibility(View.VISIBLE); // show gallery button
+        }));
     }
 
     @Override
