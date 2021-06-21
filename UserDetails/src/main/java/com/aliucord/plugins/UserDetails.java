@@ -22,9 +22,13 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.userdetails.*;
 import com.aliucord.utils.ReflectUtils;
 import com.aliucord.utils.RxUtils;
+import com.aliucord.wrappers.ChannelWrapper;
+import com.aliucord.wrappers.GuildMemberWrapper;
 import com.discord.api.channel.Channel;
 import com.discord.api.guildmember.GuildMember;
+import com.discord.api.utcdatetime.UtcDateTime;
 import com.discord.databinding.UserProfileHeaderViewBinding;
+import com.discord.models.user.CoreUser;
 import com.discord.models.user.User;
 import com.discord.stores.*;
 import com.discord.utilities.SnowflakeUtils;
@@ -55,7 +59,7 @@ public class UserDetails extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.4";
+        manifest.version = "1.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -64,9 +68,11 @@ public class UserDetails extends Plugin {
     public void start(Context ctx) {
         patcher.patch(StoreGuilds.class, "handleGuildMember", new Class<?>[]{ GuildMember.class, long.class }, new PinePatchFn(callFrame -> {
             var member = (GuildMember) callFrame.args[0];
-            if (member.d() != null && member.j() != null) {
-                var id = member.j().i();
-                cacheData((Long) callFrame.args[1], id, member.d().f(), 0);
+            UtcDateTime joinedAt;
+            com.discord.api.user.User user;
+            if ((joinedAt = GuildMemberWrapper.getJoinedAt(member)) != null && (user = GuildMemberWrapper.getUser(member)) != null) {
+                var id = new CoreUser(user).getId();
+                cacheData((Long) callFrame.args[1], id, joinedAt.f(), 0);
                 if (lastRequestedMember == id && forceUpdate != null) {
                     lastRequestedMember = 0;
                     Utils.mainThread.post(forceUpdate);
@@ -77,7 +83,7 @@ public class UserDetails extends Plugin {
         subscription = RxUtils.subscribe(RxUtils.onBackpressureBuffer(StoreStream.getGatewaySocket().getMessageCreate()), RxUtils.createActionSubscriber(message -> {
             if (message == null) return;
             var guildId = message.getGuildId();
-            cacheData(guildId == null ? message.getChannelId() : guildId, message.getAuthor().i(), 0, SnowflakeUtils.toTimestamp(message.getId()));
+            cacheData(guildId == null ? message.getChannelId() : guildId, new CoreUser(message.getAuthor()).getId(), 0, SnowflakeUtils.toTimestamp(message.getId()));
         }));
 
         patcher.patch(UserProfileHeaderView.class, "updateViewState", new Class<?>[]{ UserProfileHeaderViewModel.ViewState.Loaded.class }, new PinePatchFn(callFrame -> {
@@ -105,6 +111,7 @@ public class UserDetails extends Plugin {
     private final int viewId = View.generateViewId();
     private final int settingsHeaderId = Utils.getResId("user_settings_profile_header_view", "id");
 
+    @SuppressWarnings("ConstantConditions")
     public void cacheData(Long guildId, Long id, long joinedAt, long lastMessage) {
         if (!cache.containsKey(guildId)) cache.put(guildId, new HashMap<>());
         var guildCache = cache.get(guildId);
@@ -163,7 +170,7 @@ public class UserDetails extends Plugin {
                     } catch (Throwable e) { Main.logger.error(e); }
                 };
                 //noinspection ResultOfMethodCallIgnored
-                StoreStream.getGatewaySocket().requestGuildMembers(Collections.singletonList(gId), null, Collections.singletonList(uId));
+                StoreStream.getGatewaySocket().requestGuildMembers(gId, null, Collections.singletonList(uId));
             }
         }
 
@@ -171,7 +178,7 @@ public class UserDetails extends Plugin {
             var cId = StoreStream.getChannelsSelected().getId();
             Channel channel;
             var dontFetchLast = dm && (cId < 1 || StoreStream.getUsers().getMe().getId() != uId &&
-                ((channel = StoreStream.getChannels().getChannel(cId)) == null || CollectionUtils.findIndex(channel.v(), u -> u.i() == uId) == -1));
+                ((channel = StoreStream.getChannels().getChannel(cId)) == null || CollectionUtils.findIndex(ChannelWrapper.getRecipients(channel), u -> new CoreUser(u).getId() == uId) == -1));
             if (dontFetchLast) appendLastMessage(text, "-");
             else {
                 var cached = cache.get(dm ? cId : gId);
