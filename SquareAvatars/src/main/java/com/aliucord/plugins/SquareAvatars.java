@@ -10,15 +10,18 @@ import android.util.AttributeSet;
 
 import androidx.annotation.NonNull;
 
+import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.Constants;
 import com.aliucord.Logger;
 import com.aliucord.Main;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.PinePrePatchFn;
 import com.discord.utilities.images.MGImages;
 import com.discord.views.user.UserAvatarPresenceView;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import c.f.g.f.a;
@@ -32,7 +35,7 @@ public class SquareAvatars extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Display square avatars instead of circles.";
-        manifest.version = "0.0.9";
+        manifest.version = "0.0.10";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -45,31 +48,38 @@ public class SquareAvatars extends Plugin {
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        patcher.patch("com.airbnb.lottie.parser.AnimatableValueParser", "I2", new Class<?>[]{ a.class, Context.class, AttributeSet.class }, new PinePatchFn(callFrame -> {
-            var attrs = (AttributeSet) callFrame.args[2];
-            if (attrs == null) return;
+        for (Method m : AnimatableValueParser.class.getDeclaredMethods()) {
+            var params = m.getParameterTypes();
+            if (params.length == 3 && params[2] == AttributeSet.class && params[1] == Context.class) {
+                logger.debug("Found obfuscated updateBuilder method: " + m.getName());
+                patcher.patch(m, new PinePatchFn(callFrame -> {
+                    var attrs = (AttributeSet) callFrame.args[2];
+                    if (attrs == null) return;
 
-            try {
-                var builder = (a) callFrame.getResult();
-                var roundingParams = builder.r;
+                    try {
+                        var builder = (a) callFrame.getResult();
+                        var roundingParams = builder.r;
 
-                if (roundingParams != null && roundingParams.b) {
-                    var context = (Context) callFrame.args[1];
-                    var id = attrs.getAttributeResourceValue(Constants.NAMESPACE_ANDROID, "id", 0);
-                    if (id != 0 && contains(context.getResources().getResourceName(id))) {
-                        roundingParams.b = false;
+                        if (roundingParams != null && roundingParams.b) {
+                            var context = (Context) callFrame.args[1];
+                            var id = attrs.getAttributeResourceValue(Constants.NAMESPACE_ANDROID, "id", 0);
+                            if (id != 0 && contains(context.getResources().getResourceName(id))) {
+                                roundingParams.b = false;
 
-                        // round corners
-                        var radii = roundingParams.c;
-                        if (radii == null) {
-                            radii = new float[8];
-                            roundingParams.c = radii;
+                                // round corners
+                                var radii = roundingParams.c;
+                                if (radii == null) {
+                                    radii = new float[8];
+                                    roundingParams.c = radii;
+                                }
+                                Arrays.fill(radii, _3dp);
+                            }
                         }
-                        Arrays.fill(radii, _3dp);
-                    }
-                }
-            } catch (Throwable e) { logger.error(e); }
-        }));
+                    } catch (Throwable e) { logger.error(e); }
+                }));
+                break;
+            }
+        }
     }
 
     @Override

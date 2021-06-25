@@ -11,7 +11,7 @@ public class a {
     // expand button
     public final AppCompatImageButton h = null;
     // gallery button
-    public final AppCompatImageButton m = null;
+    public final AppCompatImageButton l = null;
     // gift button
-    public final AppCompatImageButton n = null;
+    public final AppCompatImageButton m = null;
 }

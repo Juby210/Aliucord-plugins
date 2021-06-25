@@ -14,19 +14,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
+import com.aliucord.Main;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.views.Divider;
+import com.aliucord.wrappers.messages.MessageWrapper;
+import com.discord.api.message.Message;
 import com.discord.databinding.WidgetChatListActionsBinding;
-import com.discord.models.domain.ModelMessage;
+import com.discord.models.user.CoreUser;
 import com.discord.simpleast.code.CodeNode;
 import com.discord.simpleast.code.CodeNode$a;
 import com.discord.utilities.color.ColorCompat;
@@ -44,27 +46,21 @@ public class ViewRaw extends Plugin {
     }
 
     public static class Page extends SettingsPage {
-        public ModelMessage message;
-
-        @Override
-        @SuppressWarnings("ResultOfMethodCallIgnored")
-        public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-
-            setActionBarTitle("Raw message by " + message.getAuthor().r());
-            setActionBarSubtitle("View Raw");
-        }
+        public Message message;
 
         @Override
         @SuppressLint("SetTextI18n")
+        @SuppressWarnings("ResultOfMethodCallIgnored")
         public void onViewBound(View view) {
             super.onViewBound(view);
+            setActionBarTitle("Raw message by " + new CoreUser(MessageWrapper.getAuthor(message)).getUsername());
+            setActionBarSubtitle("View Raw");
 
             var context = view.getContext();
             var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
             var padding = Utils.getDefaultPadding();
 
-            var content = message.getContent();
+            var content = MessageWrapper.getContent(message);
             if (content != null && !content.equals("")) {
                 var textView = new TextView(context);
                 var node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
@@ -115,7 +111,7 @@ public class ViewRaw extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "View & Copy raw message and markdown.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }

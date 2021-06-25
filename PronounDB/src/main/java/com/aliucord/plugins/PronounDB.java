@@ -23,7 +23,9 @@ import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.pronoundb.*;
+import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.databinding.WidgetUserSheetBinding;
+import com.discord.models.user.CoreUser;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage;
 import com.discord.widgets.chat.list.entries.ChatListEntry;
@@ -46,7 +48,7 @@ public class PronounDB extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.";
-        manifest.version = "1.0.4";
+        manifest.version = "1.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -94,9 +96,9 @@ public class PronounDB extends Plugin {
 
                 var message = ((MessageEntry) callFrame.args[1]).getMessage();
                 if (message == null) return;
-                var user = message.getAuthor();
-                var bot = user.e() == Boolean.TRUE;
-                Long userId = user.i();
+                var user = new CoreUser(MessageWrapper.getAuthor(message));
+                var bot = user.isBot();
+                Long userId = user.getId();
                 if (!bot && !Store.cache.containsKey(userId)) {
                     var finalPronounsView = pronounsView;
                     new Thread(() -> {

@@ -24,6 +24,7 @@ import com.aliucord.utils.ReflectUtils;
 import com.aliucord.utils.RxUtils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.aliucord.wrappers.GuildMemberWrapper;
+import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.api.channel.Channel;
 import com.discord.api.guildmember.GuildMember;
 import com.discord.api.utcdatetime.UtcDateTime;
@@ -59,7 +60,7 @@ public class UserDetails extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.5";
+        manifest.version = "1.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -82,8 +83,8 @@ public class UserDetails extends Plugin {
 
         subscription = RxUtils.subscribe(RxUtils.onBackpressureBuffer(StoreStream.getGatewaySocket().getMessageCreate()), RxUtils.createActionSubscriber(message -> {
             if (message == null) return;
-            var guildId = message.getGuildId();
-            cacheData(guildId == null ? message.getChannelId() : guildId, new CoreUser(message.getAuthor()).getId(), 0, SnowflakeUtils.toTimestamp(message.getId()));
+            var guildId = MessageWrapper.getGuildId(message);
+            cacheData(guildId == null ? MessageWrapper.getChannelId(message) : guildId, new CoreUser(MessageWrapper.getAuthor(message)).getId(), 0, SnowflakeUtils.toTimestamp(MessageWrapper.getId(message)));
         }));
 
         patcher.patch(UserProfileHeaderView.class, "updateViewState", new Class<?>[]{ UserProfileHeaderViewModel.ViewState.Loaded.class }, new PinePatchFn(callFrame -> {
@@ -221,7 +222,7 @@ public class UserDetails extends Plugin {
                 cacheData(id, authorId, 0, -1);
             } else if (res.getHits() != null) {
                 var hit = res.getHits().get(0);
-                cacheData(id, authorId, 0, SnowflakeUtils.toTimestamp(hit.getId()));
+                cacheData(id, authorId, 0, SnowflakeUtils.toTimestamp(MessageWrapper.getId(hit)));
             } else return;
             if (lastRequestedSearch == authorId && forceUpdate != null) {
                 lastRequestedSearch = 0;

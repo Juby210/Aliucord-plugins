@@ -34,15 +34,9 @@ public final class PluginSettings extends SettingsPage {
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        setActionBarTitle(plugin);
-    }
-
-    @Override
     public void onViewBound(View view) {
         super.onViewBound(view);
+        setActionBarTitle(plugin);
 
         var sets = Objects.requireNonNull(PluginManager.plugins.get(plugin)).sets;
         var context = view.getContext();

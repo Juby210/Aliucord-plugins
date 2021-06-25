@@ -22,7 +22,7 @@ public class NoGiftButton extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Hides useless gift button.";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -34,8 +34,8 @@ public class NoGiftButton extends Plugin {
             var binding = fragment.j();
             if (binding == null) return;
             binding.h.setVisibility(View.GONE); // hide expand button
-            binding.n.setVisibility(View.GONE); // hide gift button
-            binding.m.setVisibility(View.VISIBLE); // show gallery button
+            binding.m.setVisibility(View.GONE); // hide gift button
+            binding.l.setVisibility(View.VISIBLE); // show gallery button
         }));
     }
 

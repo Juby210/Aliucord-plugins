@@ -15,32 +15,38 @@
         "version": "0.0.4"
     },
     "NoAutoReplyMention": {
-        "version": "0.0.2"
+        "version": "0.0.3",
+        "minimumDiscordVersion": 81110
     },
     "NoCopyEmbeds": {
         "version": "1.0.3"
     },
     "NoGiftButton": {
-        "version": "1.0.3"
+        "version": "1.0.4",
+        "minimumDiscordVersion": 81110
     },
     "PronounDB": {
-        "version": "1.0.4"
+        "version": "1.0.5",
+        "minimumDiscordVersion": 81110
     },
     "RemoveZoomLimit": {
         "version": "1.0.2"
     },
     "SquareAvatars": {
-        "version": "0.0.9"
+        "version": "0.0.10",
+        "minimumDiscordVersion": 81110
     },
     "Tags": {
         "version": "1.0.6",
         "minimumDiscordVersion": 79201
     },
     "UserDetails": {
-        "version": "1.0.5"
+        "version": "1.0.6",
+        "minimumDiscordVersion": 81110
     },
     "ViewRaw": {
-        "version": "1.0.2"
+        "version": "1.0.3",
+        "minimumDiscordVersion": 81110
     },
     "default": {
         "minimumDiscordVersion": 80202,
