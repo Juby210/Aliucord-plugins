@@ -32,6 +32,9 @@
     "RemoveZoomLimit": {
         "version": "1.0.2"
     },
+    "RestoreImageLinks": {
+        "version": "1.0.1"
+    },
     "SquareAvatars": {
         "version": "0.0.10",
         "minimumDiscordVersion": 81110
