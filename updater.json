@@ -1,9 +1,9 @@
 {
     "CustomNicknameFormat": {
-        "version": "1.0.1"
+        "version": "1.0.2"
     },
     "CustomTimestamps": {
-        "version": "1.0.3"
+        "version": "1.0.4"
     },
     "Experiments": {
         "version": "1.0.3"
@@ -12,22 +12,16 @@
         "version": "1.0.2"
     },
     "MoreSlashCommands": {
-        "version": "0.0.4"
+        "version": "0.0.5"
     },
     "NoAutoReplyMention": {
-        "version": "0.0.3",
-        "minimumDiscordVersion": 81110
+        "version": "0.0.4"
     },
     "NoCopyEmbeds": {
         "version": "1.0.3"
     },
-    "NoGiftButton": {
-        "version": "1.0.4",
-        "minimumDiscordVersion": 81110
-    },
     "PronounDB": {
-        "version": "1.0.5",
-        "minimumDiscordVersion": 81110
+        "version": "1.0.6"
     },
     "RemoveZoomLimit": {
         "version": "1.0.2"
@@ -40,19 +34,16 @@
         "minimumDiscordVersion": 81110
     },
     "Tags": {
-        "version": "1.0.6",
-        "minimumDiscordVersion": 79201
+        "version": "1.0.7"
     },
     "UserDetails": {
-        "version": "1.0.6",
-        "minimumDiscordVersion": 81110
+        "version": "1.0.7"
     },
     "ViewRaw": {
-        "version": "1.0.3",
-        "minimumDiscordVersion": 81110
+        "version": "1.0.4"
     },
     "default": {
-        "minimumDiscordVersion": 80202,
+        "minimumDiscordVersion": 83210,
         "version": "1.0.0",
         "build": "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/%s.zip"
     }
