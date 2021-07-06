@@ -33,9 +33,6 @@ Disables reply mention by default.
 ### [NoCopyEmbeds](https://github.com/Juby210/Aliucord-plugins/raw/builds/NoCopyEmbeds.zip)
 Disables copying text from embeds.
 
-### [NoGiftButton](https://github.com/Juby210/Aliucord-plugins/raw/builds/NoGiftButton.zip)
-Hides useless gift button.
-
 ### [PronounDB](https://github.com/Juby210/Aliucord-plugins/raw/builds/PronounDB.zip)
 PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.
 
@@ -50,9 +47,6 @@ Restores image links in chat.
 
 ### [SquareAvatars](https://github.com/Juby210/Aliucord-plugins/raw/builds/SquareAvatars.zip)
 Display square avatars instead of circles.
-
-### [StickerTweaks](https://github.com/Juby210/Aliucord-plugins/raw/builds/StickerTweaks.zip)
-Adds option to enable/disable stickers and stickers autocomplete.
 
 ### [Tags](https://github.com/Juby210/Aliucord-plugins/raw/builds/Tags.zip)
 Allows you to send custom tags.

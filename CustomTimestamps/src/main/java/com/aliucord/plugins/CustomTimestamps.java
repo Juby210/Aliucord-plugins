@@ -7,10 +7,7 @@ package com.aliucord.plugins;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.text.Editable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextWatcher;
+import android.text.*;
 import android.text.method.LinkMovementMethod;
 import android.text.style.URLSpan;
 import android.view.View;
@@ -19,44 +16,46 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Main;
-import com.aliucord.PluginManager;
 import com.aliucord.Utils;
+import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
+import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.views.TextInput;
-import com.aliucord.fragments.SettingsPage;
 import com.discord.utilities.time.Clock;
 import com.discord.utilities.time.TimeUtils;
 import com.lytefast.flexinput.R$h;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 
 @SuppressLint("SimpleDateFormat")
 @SuppressWarnings("unused")
 public class CustomTimestamps extends Plugin {
     public CustomTimestamps() {
-        settings = new Settings(PluginSettings.class);
+        settingsTab = new SettingsTab(PluginSettings.class).withArgs(settings);
     }
 
     public static class PluginSettings extends SettingsPage {
+        private final SettingsAPI settings;
+        public PluginSettings(SettingsAPI settings) {
+            this.settings = settings;
+        }
+
         @Override
         @SuppressWarnings("ResultOfMethodCallIgnored")
         public void onViewBound(View view) {
             super.onViewBound(view);
             setActionBarTitle("CustomTimestamps");
+            setPadding(0);
 
             var padding = Utils.getDefaultPadding();
-            var sets = Objects.requireNonNull(PluginManager.plugins.get("CustomTimestamps")).sets;
-
             var context = view.getContext();
-            var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
+            var layout = getLinearLayout();
 
-            var format = sets.getString("format", "dd.MM.yyyy, HH:mm:ss");
+            var format = settings.getString("format", "dd.MM.yyyy, HH:mm:ss");
             var guide = new TextView(context, null, 0, R$h.UiKit_Settings_Item_SubText);
             setPreview(format, guide);
             guide.setMovementMethod(LinkMovementMethod.getInstance());
@@ -73,7 +72,7 @@ public class CustomTimestamps extends Plugin {
             editText.addTextChangedListener(new TextWatcher() {
                 public void afterTextChanged(Editable s) {
                     var newFormat = s.toString();
-                    sets.setString("format", newFormat);
+                    settings.setString("format", newFormat);
                     setPreview(newFormat, guide);
                 }
 
@@ -98,7 +97,7 @@ public class CustomTimestamps extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Custom timestamps format everywhere.";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -106,7 +105,7 @@ public class CustomTimestamps extends Plugin {
     @Override
     public void start(Context context) throws Throwable {
         patcher.patch(TimeUtils.class.getDeclaredMethod("toReadableTimeString", Context.class, long.class, Clock.class), new PinePatchFn(callFrame ->
-            callFrame.setResult(format(sets.getString("format", defaultFormat), (long) callFrame.args[1]))));
+            callFrame.setResult(format(settings.getString("format", defaultFormat), (long) callFrame.args[1]))));
     }
 
     @Override

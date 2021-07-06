@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.discord.api.channel.Channel;
-import com.discord.api.message.Message;
+import com.discord.models.message.Message;
 
 @SuppressWarnings("unused")
 public class NoAutoReplyMention extends Plugin {
@@ -22,7 +22,7 @@ public class NoAutoReplyMention extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Disables reply mention by default.";
-        manifest.version = "0.0.3";
+        manifest.version = "0.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }

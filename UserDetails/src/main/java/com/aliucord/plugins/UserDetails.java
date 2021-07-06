@@ -19,16 +19,17 @@ import androidx.core.content.res.ResourcesCompat;
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.plugins.userdetails.*;
+import com.aliucord.plugins.userdetails.CachedData;
+import com.aliucord.plugins.userdetails.PluginSettings;
 import com.aliucord.utils.ReflectUtils;
 import com.aliucord.utils.RxUtils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.aliucord.wrappers.GuildMemberWrapper;
-import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.api.channel.Channel;
 import com.discord.api.guildmember.GuildMember;
 import com.discord.api.utcdatetime.UtcDateTime;
 import com.discord.databinding.UserProfileHeaderViewBinding;
+import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.models.user.User;
 import com.discord.stores.*;
@@ -51,7 +52,7 @@ import rx.Subscription;
 @SuppressWarnings({"unused"})
 public class UserDetails extends Plugin {
     public UserDetails() {
-        settings = new Settings(PluginSettings.class, Settings.Type.BOTTOMSHEET);
+        settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings);
     }
 
     @NonNull
@@ -60,7 +61,7 @@ public class UserDetails extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.6";
+        manifest.version = "1.0.7";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -83,8 +84,9 @@ public class UserDetails extends Plugin {
 
         subscription = RxUtils.subscribe(RxUtils.onBackpressureBuffer(StoreStream.getGatewaySocket().getMessageCreate()), RxUtils.createActionSubscriber(message -> {
             if (message == null) return;
-            var guildId = MessageWrapper.getGuildId(message);
-            cacheData(guildId == null ? MessageWrapper.getChannelId(message) : guildId, new CoreUser(MessageWrapper.getAuthor(message)).getId(), 0, SnowflakeUtils.toTimestamp(MessageWrapper.getId(message)));
+            var msg = new Message(message);
+            var guildId = msg.getGuildId();
+            cacheData(guildId == null ? msg.getChannelId() : guildId, new CoreUser(msg.getAuthor()).getId(), 0, SnowflakeUtils.toTimestamp(msg.getId()));
         }));
 
         patcher.patch(UserProfileHeaderView.class, "updateViewState", new Class<?>[]{ UserProfileHeaderViewModel.ViewState.Loaded.class }, new PinePatchFn(callFrame -> {
@@ -126,12 +128,13 @@ public class UserDetails extends Plugin {
     public void addDetails(UserProfileHeaderView _this, User user) throws Throwable {
         if (user == null) return;
         var settingsHeader = _this.getId() == settingsHeaderId;
-        var displayCreatedAt = sets.getBool("createdAt", true);
+        var displayCreatedAt = settings.getBool("createdAt", true);
         if (settingsHeader && !displayCreatedAt) return;
         var binding = (UserProfileHeaderViewBinding) ReflectUtils.getField(UserProfileHeaderView.class, _this, "binding", true);
         if (binding == null) return;
 
-        var layout = (LinearLayout) binding.f.getParent();
+        var customStatus = binding.a.findViewById(Utils.getResId("user_profile_header_custom_status", "id"));
+        var layout = (LinearLayout) customStatus.getParent();
         var context = layout.getContext();
         TextView detailsView = layout.findViewById(viewId);
         if (detailsView == null) {
@@ -139,7 +142,7 @@ public class UserDetails extends Plugin {
             detailsView.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
             detailsView.setTextColor(ColorCompat.getThemedColor(context, R$b.colorTextMuted));
             detailsView.setId(viewId);
-            layout.addView(detailsView, layout.indexOfChild(binding.f));
+            layout.addView(detailsView, layout.indexOfChild(customStatus));
         }
 
         var uId = user.getId();
@@ -156,7 +159,7 @@ public class UserDetails extends Plugin {
 
         var gId = StoreStream.getGuildSelected().getSelectedGuildId();
         var dm = gId == 0;
-        if (sets.getBool("joinedAt", true) && !dm) {
+        if (settings.getBool("joinedAt", true) && !dm) {
             Map<Long, CachedData> guildCache;
             CachedData data;
             if ((guildCache = cache.get(gId)) != null && (data = guildCache.get(uId)) != null && data.joinedAt != 0) {
@@ -175,7 +178,7 @@ public class UserDetails extends Plugin {
             }
         }
 
-        if (sets.getBool("lastMessage", true)) {
+        if (settings.getBool("lastMessage", true)) {
             var cId = StoreStream.getChannelsSelected().getId();
             Channel channel;
             var dontFetchLast = dm && (cId < 1 || StoreStream.getUsers().getMe().getId() != uId &&
@@ -222,7 +225,7 @@ public class UserDetails extends Plugin {
                 cacheData(id, authorId, 0, -1);
             } else if (res.getHits() != null) {
                 var hit = res.getHits().get(0);
-                cacheData(id, authorId, 0, SnowflakeUtils.toTimestamp(MessageWrapper.getId(hit)));
+                cacheData(id, authorId, 0, SnowflakeUtils.toTimestamp(new Message(hit).getId()));
             } else return;
             if (lastRequestedSearch == authorId && forceUpdate != null) {
                 lastRequestedSearch = 0;

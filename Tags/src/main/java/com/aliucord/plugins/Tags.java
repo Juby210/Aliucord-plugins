@@ -29,13 +29,13 @@ public class Tags extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Allows you to send custom tags.";
-        manifest.version = "1.0.6";
+        manifest.version = "1.0.7";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "ConstantConditions" })
+    @SuppressWarnings("ConstantConditions")
     public void start(Context context) {
         existingTags = new ArrayList<>();
         subcommands = new ArrayList<>();
@@ -100,24 +100,24 @@ public class Tags extends Plugin {
             Arrays.asList(existingTag, CommandsAPI.requiredMessageOption)
         ));
 
-        HashMap<String, String> _tags = sets.getObject("tags", null, tagsType);
+        HashMap<String, String> _tags = settings.getObject("tags", null, tagsType);
         if (_tags != null) for (Map.Entry<String, String> tag : _tags.entrySet()) registerTag(tag.getKey(), tag.getValue());
 
         commands.registerCommand(
             "tag",
             "Send and manage tags",
             subcommands,
-            args -> {
-                if (args.containsKey("add")) return AddCommand.execute((Map<String, ?>) args.get("add"), sets, this);
-                if (args.containsKey("delete")) return DeleteCommand.execute((Map<String, ?>) args.get("delete"), sets, this);
-                if (args.containsKey("list")) return ListCommand.execute(sets);
-                if (args.containsKey("rename")) return RenameCommand.execute((Map<String, ?>) args.get("rename"), sets, this);
-                if (args.containsKey("update")) return UpdateCommand.execute((Map<String, ?>) args.get("update"), sets, this);
+            ctx -> {
+                if (ctx.containsArg("add")) return AddCommand.execute(ctx.getSubCommandArgs("add"), settings, this);
+                if (ctx.containsArg("delete")) return DeleteCommand.execute(ctx.getSubCommandArgs("delete"), settings, this);
+                if (ctx.containsArg("list")) return ListCommand.execute(settings);
+                if (ctx.containsArg("rename")) return RenameCommand.execute(ctx.getSubCommandArgs("rename"), settings, this);
+                if (ctx.containsArg("update")) return UpdateCommand.execute(ctx.getSubCommandArgs("update"), settings, this);
 
-                HashMap<String, String> tags = sets.getObject("tags", null, tagsType);
+                HashMap<String, String> tags = settings.getObject("tags", null, tagsType);
                 if (tags != null) for (Map.Entry<String, String> tag : tags.entrySet()) {
-                    if (args.containsKey(tag.getKey()))
-                        return new CommandsAPI.CommandResult(runTag(tag.getValue(), (Map<String, ?>) args.get(tag.getKey())));
+                    if (ctx.containsArg(tag.getKey()))
+                        return new CommandsAPI.CommandResult(runTag(tag.getValue(), ctx.getSubCommandArgs(tag.getKey())));
                 }
 
                 return new CommandsAPI.CommandResult();

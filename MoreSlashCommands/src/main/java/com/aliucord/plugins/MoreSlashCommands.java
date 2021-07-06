@@ -6,13 +6,14 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 
+import com.aliucord.Main;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.utils.ReflectUtils;
+import com.lytefast.flexinput.model.Attachment;
 
 import java.util.Collections;
 
@@ -24,13 +25,10 @@ public class MoreSlashCommands extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Adds more slash commands.";
-        manifest.version = "0.0.4";
+        manifest.version = "0.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
-
-    public static boolean markAttachmentsAsSpoiler = false;
-    public static long markAttachmentsAsSpoilerTime = 0;
 
     @Override
     public void start(Context context) {
@@ -38,8 +36,8 @@ public class MoreSlashCommands extends Plugin {
             "lenny",
             "Appends ( ͡° ͜ʖ ͡°) to your message.",
             Collections.singletonList(CommandsAPI.messageOption),
-            args -> {
-                var msg = (String) args.get("message");
+            ctx -> {
+                var msg = ctx.getString("message");
                 return new CommandsAPI.CommandResult((msg == null ? "" : msg) + " ( ͡° ͜ʖ ͡°)");
             }
         );
@@ -48,9 +46,8 @@ public class MoreSlashCommands extends Plugin {
             "mock",
             "Mock a user",
             Collections.singletonList(CommandsAPI.requiredMessageOption),
-            args -> {
-                var msg = (String) args.get("message");
-                if (msg == null) return new CommandsAPI.CommandResult(msg);
+            ctx -> {
+                var msg = ctx.getRequiredString("message");
                 var newMsg = new StringBuilder(msg.trim());
                 var j = newMsg.length();
                 for (var i = 1; i < j; i += 2) newMsg.setCharAt(i, Character.toUpperCase(newMsg.charAt(i)));
@@ -62,9 +59,8 @@ public class MoreSlashCommands extends Plugin {
             "upper",
             "Makes text uppercase",
             Collections.singletonList(CommandsAPI.requiredMessageOption),
-            args -> {
-                var msg = (String) args.get("message");
-                if (msg == null) return new CommandsAPI.CommandResult(msg);
+            ctx -> {
+                var msg = ctx.getRequiredString("message");
                 return new CommandsAPI.CommandResult(msg.trim().toUpperCase());
             }
         );
@@ -73,9 +69,8 @@ public class MoreSlashCommands extends Plugin {
             "lower",
             "Makes text lowercase",
             Collections.singletonList(CommandsAPI.requiredMessageOption),
-            args -> {
-                var msg = (String) args.get("message");
-                if (msg == null) return new CommandsAPI.CommandResult(msg);
+            ctx -> {
+                var msg = ctx.getRequiredString("message");
                 return new CommandsAPI.CommandResult(msg.trim().toLowerCase());
             }
         );
@@ -84,32 +79,23 @@ public class MoreSlashCommands extends Plugin {
             "owo",
             "Owoify's your text",
             Collections.singletonList(CommandsAPI.requiredMessageOption),
-            args -> {
-                var msg = (String) args.get("message");
-                if (msg == null) return new CommandsAPI.CommandResult(msg);
+            ctx -> {
+                var msg = ctx.getRequiredString("message");
                 return new CommandsAPI.CommandResult(owoify(msg.trim()));
             }
-        );
-
-        // spoilerfiles command
-        patcher.patch("com.discord.widgets.chat.MessageManager$sendMessage$2", "invoke", new Class<?>[]{ Object.class },
-            new PinePatchFn(callFrame -> markAttachmentsAsSpoiler = false));
-
-        patcher.patch("com.discord.utilities.attachments.AttachmentUtilsKt", "getSanitizedFileName", new Class<?>[]{ String.class, Bitmap.CompressFormat.class },
-            new PinePatchFn(callFrame -> {
-                if (markAttachmentsAsSpoiler && markAttachmentsAsSpoilerTime - 100 < System.currentTimeMillis()) callFrame.setResult("SPOILER_" + callFrame.getResult());
-            })
         );
 
         commands.registerCommand(
             "spoilerfiles",
             "Marks attachments as spoilers",
             Collections.singletonList(CommandsAPI.messageOption),
-            args -> {
-                markAttachmentsAsSpoiler = true;
-                markAttachmentsAsSpoilerTime = System.currentTimeMillis();
-                var msg = (String) args.get("message");
-                return new CommandsAPI.CommandResult(msg == null ? "" : msg);
+            ctx -> {
+                var c = Attachment.class;
+                try {
+                    for (var a : ctx.getAttachments())
+                        ReflectUtils.setField(c, a, "displayName", "SPOILER_" + a.getDisplayName(), true);
+                } catch (Throwable e) { Main.logger.error(e); }
+                return new CommandsAPI.CommandResult(ctx.getStringOrDefault("message", ""));
             }
         );
     }
@@ -117,7 +103,6 @@ public class MoreSlashCommands extends Plugin {
     @Override
     public void stop(Context context) {
         commands.unregisterAll();
-        patcher.unpatchAll();
     }
 
     public String owoify(final String text) {

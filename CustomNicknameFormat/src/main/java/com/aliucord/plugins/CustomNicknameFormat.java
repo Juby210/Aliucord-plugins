@@ -8,15 +8,13 @@ package com.aliucord.plugins;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.aliucord.PluginManager;
 import com.aliucord.Utils;
+import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.widgets.LinearLayout;
@@ -30,16 +28,22 @@ import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
 import com.lytefast.flexinput.R$b;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class CustomNicknameFormat extends Plugin {
     public CustomNicknameFormat() {
-        settings = new Settings(PluginSettings.class, Settings.Type.BOTTOMSHEET);
+        settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings);
     }
 
     public static class PluginSettings extends AppBottomSheet {
         public int getContentViewResId() { return 0; }
+
+        private final SettingsAPI settings;
+        public PluginSettings(SettingsAPI settings) {
+            this.settings = settings;
+        }
 
         @Nullable
         @Override
@@ -57,15 +61,14 @@ public class CustomNicknameFormat extends Plugin {
             );
 
             var radioManager = new RadioManager(radios);
-            var sets = Objects.requireNonNull(PluginManager.plugins.get("CustomNicknameFormat")).sets;
-            var format = Format.valueOf(sets.getString("format", Format.NICKNAME_USERNAME.name()));
+            var format = Format.valueOf(settings.getString("format", Format.NICKNAME_USERNAME.name()));
 
             var j = radios.size();
             for (var i = 0; i < j; i++) {
                 var k = i;
                 var radio = radios.get(k);
                 radio.e(e -> {
-                    sets.setString("format", Format.values()[k].name());
+                    settings.setString("format", Format.values()[k].name());
                     radioManager.a(radio);
                 });
                 layout.addView(radio);
@@ -84,7 +87,7 @@ public class CustomNicknameFormat extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Allows you to customize nickname format.";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -109,7 +112,7 @@ public class CustomNicknameFormat extends Plugin {
     }
 
     private String getFormatted(String username, String res, User user) {
-        var format = Format.valueOf(sets.getString("format", Format.NICKNAME_USERNAME.name()));
+        var format = Format.valueOf(settings.getString("format", Format.NICKNAME_USERNAME.name()));
         switch (format) {
             case NICKNAME_USERNAME:
                 return res + " (" + username + ")";

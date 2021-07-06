@@ -14,20 +14,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
-import com.aliucord.Main;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.views.Divider;
-import com.aliucord.wrappers.messages.MessageWrapper;
-import com.discord.api.message.Message;
 import com.discord.databinding.WidgetChatListActionsBinding;
+import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.simpleast.code.CodeNode;
 import com.discord.simpleast.code.CodeNode$a;
@@ -46,21 +43,23 @@ public class ViewRaw extends Plugin {
     }
 
     public static class Page extends SettingsPage {
-        public Message message;
+        public final Message message;
+        public Page(Message message) {
+            this.message = message;
+        }
 
         @Override
         @SuppressLint("SetTextI18n")
         @SuppressWarnings("ResultOfMethodCallIgnored")
         public void onViewBound(View view) {
             super.onViewBound(view);
-            setActionBarTitle("Raw message by " + new CoreUser(MessageWrapper.getAuthor(message)).getUsername());
+            setActionBarTitle("Raw message by " + new CoreUser(message.getAuthor()).getUsername());
             setActionBarSubtitle("View Raw");
 
             var context = view.getContext();
-            var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
-            var padding = Utils.getDefaultPadding();
+            var layout = getLinearLayout();
 
-            var content = MessageWrapper.getContent(message);
+            var content = message.getContent();
             if (content != null && !content.equals("")) {
                 var textView = new TextView(context);
                 var node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
@@ -70,7 +69,6 @@ public class ViewRaw extends Plugin {
                 node.render(builder, new RenderContext(context));
                 textView.setText(builder);
                 textView.setTextIsSelectable(true);
-                textView.setPadding(padding, padding, padding, padding);
                 layout.addView(textView);
                 layout.addView(new Divider(context));
             }
@@ -78,6 +76,7 @@ public class ViewRaw extends Plugin {
             var header = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Header);
             header.setText("All Raw Data");
             header.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
+            header.setPadding(0, header.getPaddingTop(), header.getPaddingRight(), header.getPaddingBottom());
             layout.addView(header);
 
             var textView = new TextView(context);
@@ -88,7 +87,6 @@ public class ViewRaw extends Plugin {
             node.render(builder, new RenderContext(context));
             textView.setText(builder);
             textView.setTextIsSelectable(true);
-            textView.setPadding(padding, 0, padding, padding);
             layout.addView(textView);
         }
     }
@@ -111,7 +109,7 @@ public class ViewRaw extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "View & Copy raw message and markdown.";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -132,9 +130,8 @@ public class ViewRaw extends Plugin {
                 var binding = (WidgetChatListActionsBinding) getBinding.invoke(callFrame.thisObject);
                 if (binding == null) return;
                 TextView viewRaw = binding.a.findViewById(id);
-                var viewRawPage = new Page();
-                viewRawPage.message = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
-                viewRaw.setOnClickListener(e -> Utils.openPageWithProxy(e.getContext(), viewRawPage));
+                viewRaw.setOnClickListener(e ->
+                    Utils.openPageWithProxy(e.getContext(), new Page(((WidgetChatListActions.Model) callFrame.args[0]).getMessage())));
             } catch (Throwable ignored) {}
         }));
 

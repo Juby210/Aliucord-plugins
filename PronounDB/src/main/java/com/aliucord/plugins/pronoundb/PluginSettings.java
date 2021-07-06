@@ -6,19 +6,14 @@
 package com.aliucord.plugins.pronoundb;
 
 import android.annotation.SuppressLint;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
-import com.aliucord.PluginManager;
-import com.aliucord.Utils;
+import com.aliucord.*;
+import com.aliucord.api.SettingsAPI;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.views.Divider;
 import com.discord.views.CheckedSetting;
@@ -26,21 +21,25 @@ import com.discord.views.RadioManager;
 import com.lytefast.flexinput.R$h;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 @SuppressLint("SetTextI18n")
 public final class PluginSettings extends SettingsPage {
     private static final String plugin = "PronounDB";
+
+    private final SettingsAPI settings;
+    public PluginSettings(SettingsAPI settings) {
+        this.settings = settings;
+    }
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void onViewBound(View view) {
         super.onViewBound(view);
         setActionBarTitle(plugin);
+        setPadding(0);
 
-        var sets = Objects.requireNonNull(PluginManager.plugins.get(plugin)).sets;
         var context = view.getContext();
-        var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
+        var layout = getLinearLayout();
 
         var appearanceHeader = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Header);
         appearanceHeader.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
@@ -53,14 +52,14 @@ public final class PluginSettings extends SettingsPage {
         );
 
         var radioManager = new RadioManager(radios);
-        int format = sets.getInt("format", 0);
+        int format = settings.getInt("format", 0);
 
         int j = radios.size();
         for (int i = 0; i < j; i++) {
             int k = i;
             var radio = radios.get(k);
             radio.e(e -> {
-                sets.setInt("format", k);
+                settings.setInt("format", k);
                 radioManager.a(radio);
             });
             layout.addView(radio);
@@ -68,18 +67,18 @@ public final class PluginSettings extends SettingsPage {
         }
 
         var displayChat = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Show pronouns in chat", null);
-        displayChat.setChecked(sets.getBool("displayChat", true));
+        displayChat.setChecked(settings.getBool("displayChat", true));
         displayChat.setOnCheckedListener(c -> {
-            sets.setBool("displayChat", c);
+            settings.setBool("displayChat", c);
             reloadPlugin();
         });
         layout.addView(new Divider(context));
         layout.addView(displayChat);
 
         var displayProfile = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Show pronouns in profiles", null);
-        displayProfile.setChecked(sets.getBool("displayProfile", true));
+        displayProfile.setChecked(settings.getBool("displayProfile", true));
         displayProfile.setOnCheckedListener(c -> {
-            sets.setBool("displayProfile", c);
+            settings.setBool("displayProfile", c);
             reloadPlugin();
         });
         layout.addView(new Divider(context));

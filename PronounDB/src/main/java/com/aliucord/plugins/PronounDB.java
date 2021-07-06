@@ -23,7 +23,6 @@ import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.pronoundb.*;
-import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.databinding.WidgetUserSheetBinding;
 import com.discord.models.user.CoreUser;
 import com.discord.utilities.color.ColorCompat;
@@ -39,7 +38,7 @@ import com.lytefast.flexinput.R$h;
 @SuppressWarnings({"unused", "JavaReflectionMemberAccess"})
 public class PronounDB extends Plugin {
     public PronounDB() {
-        settings = new Settings(PluginSettings.class);
+        settingsTab = new SettingsTab(PluginSettings.class).withArgs(settings);
     }
 
     @NonNull
@@ -48,17 +47,17 @@ public class PronounDB extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.";
-        manifest.version = "1.0.5";
+        manifest.version = "1.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
     @Override
     public void start(Context context) {
-        if (sets.getBool("displayChat", true)) try {
+        if (settings.getBool("displayChat", true)) try {
             injectMessages();
         } catch (Throwable e) { Main.logger.error(e); }
-        if (sets.getBool("displayProfile", true)) injectProfile();
+        if (settings.getBool("displayProfile", true)) injectProfile();
     }
 
     @Override
@@ -95,8 +94,9 @@ public class PronounDB extends Plugin {
                 }
 
                 var message = ((MessageEntry) callFrame.args[1]).getMessage();
+                //noinspection ConstantConditions
                 if (message == null) return;
-                var user = new CoreUser(MessageWrapper.getAuthor(message));
+                var user = new CoreUser(message.getAuthor());
                 var bot = user.isBot();
                 Long userId = user.getId();
                 if (!bot && !Store.cache.containsKey(userId)) {
@@ -132,7 +132,7 @@ public class PronounDB extends Plugin {
             return;
         }
         pronounsView.setVisibility(View.VISIBLE);
-        pronounsView.setText(" • " + Constants.getPronouns(c, sets.getInt("format", 0)));
+        pronounsView.setText(" • " + Constants.getPronouns(c, settings.getInt("format", 0)));
     }
 
     public void addPronounsToUserSheet(WidgetUserSheetBinding binding, Long userId) {
@@ -150,7 +150,7 @@ public class PronounDB extends Plugin {
             pronounsView.setPadding(Utils.dpToPx(16), 0, 0, 0);
             layout.addView(pronounsView, layout.indexOfChild(noteHeader));
         }
-        pronounsView.setText("Pronouns • " + Constants.getPronouns(c, sets.getInt("format", 0)));
+        pronounsView.setText("Pronouns • " + Constants.getPronouns(c, settings.getInt("format", 0)));
     }
 
     public final int viewId = View.generateViewId();
