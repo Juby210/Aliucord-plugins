@@ -24,7 +24,7 @@ public class RemoveZoomLimit extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Removes maximum zoom limit.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -33,8 +33,11 @@ public class RemoveZoomLimit extends Plugin {
     public void start(Context context) {
         // load full resolution to see details while zooming
         patcher.patch("com.discord.widgets.media.WidgetMedia", "getFormattedUrl", new Class<?>[]{ Context.class, Uri.class }, new PinePatchFn(callFrame -> {
-            var arr = ((String) callFrame.getResult()).split("\\?");
-            callFrame.setResult(arr[0] + (arr[1].contains("format=") ? "?format=" + arr[1].split("format=")[1] : ""));
+            var res = (String) callFrame.getResult();
+            if (res.startsWith("https://media.discordapp.net")) {
+                var arr = res.split("\\?");
+                callFrame.setResult(arr[0] + (arr[1].contains("format=") ? "?format=" + arr[1].split("format=")[1] : ""));
+            }
         }));
 
         // com.facebook.samples.zoomable.DefaultZoomableController limitScale
