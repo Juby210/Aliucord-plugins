@@ -53,6 +53,7 @@ public class RemoveZoomLimit extends Plugin {
             if (params.length == 4 && params[0] == c.f.j.d.f.class && params[1] == c.f.j.d.e.class && params[3] == int.class) {
                 Utils.log("[RemoveZoomLimit] Found obfuscated method to limit resolution: " + m.getName());
                 patcher.patch(m, MethodReplacement.returnConstant(1));
+                break;
             }
         }
     }
