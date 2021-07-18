@@ -47,7 +47,7 @@ public class PronounDB extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.";
-        manifest.version = "1.0.6";
+        manifest.version = "1.0.7";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -135,11 +135,13 @@ public class PronounDB extends Plugin {
         pronounsView.setText(" • " + Constants.getPronouns(c, settings.getInt("format", 0)));
     }
 
+    private static final int noteHeaderId = Utils.getResId("user_sheet_note_header", "id");
+
     public void addPronounsToUserSheet(WidgetUserSheetBinding binding, Long userId) {
         var c = Store.cache.get(userId);
         if (c == null || c.equals("unspecified")) return;
 
-        var noteHeader = binding.x;
+        var noteHeader = binding.a.findViewById(noteHeaderId);
         var layout = (LinearLayout) noteHeader.getParent();
 
         TextView pronounsView = layout.findViewById(viewId);
