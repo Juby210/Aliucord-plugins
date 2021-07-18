@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.0-alpha02'
+        classpath 'com.android.tools.build:gradle:7.1.0-alpha03'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -18,7 +18,7 @@ ext {
 
     appCompatVer = "1.2.0"
     materialVer = "1.2.1"
-    constraintLayoutVer = "2.0.1"
+    constraintLayoutVer = "2.0.4"
 }
 
 allprojects {

@@ -16,6 +16,14 @@ Shows hidden Developer Options tab with Experiments.
 ### [HideDisabledEmojis](https://github.com/Juby210/Aliucord-plugins/raw/builds/HideDisabledEmojis.zip)
 Hides disabled emojis in emoji picker and autocomplete.
 
+### [MessageLogger](https://github.com/Juby210/Aliucord-plugins/raw/builds/MessageLogger.zip)
+Temporary saves deleted and edited messages. WIP. Released version without all planned features because a lot of people asked.
+
+TODO:
+- whitelist/blacklist system
+- notifications (partially done on my local version)
+- saving data to json and loading it
+
 ### [MoreSlashCommands](https://github.com/Juby210/Aliucord-plugins/raw/builds/MoreSlashCommands.zip)
 Adds more slash commands.
 
