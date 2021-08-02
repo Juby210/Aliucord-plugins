@@ -46,7 +46,8 @@ public final class MessageLogger extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Temporary saves deleted and edited messages. WIP";
-        manifest.version = "0.0.1";
+        manifest.version = "0.0.2";
+        manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
 
@@ -117,7 +118,7 @@ public final class MessageLogger extends Plugin {
             var id = msg.getId();
             var edited = msg.getEditedTimestamp();
 
-            if (edited != null && edited.f() > 0) {
+            if (edited != null && edited.g() > 0) {
                 var channelId = msg.getChannelId();
                 var origMsg = getCachedMessage(channelId, id);
 

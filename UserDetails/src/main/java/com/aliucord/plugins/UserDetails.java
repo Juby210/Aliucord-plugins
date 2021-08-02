@@ -61,7 +61,7 @@ public class UserDetails extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Displays when user created account, joined to server and when sent last message in selected server / dm.";
-        manifest.version = "1.0.7";
+        manifest.version = "1.0.8";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -74,7 +74,7 @@ public class UserDetails extends Plugin {
             com.discord.api.user.User user;
             if ((joinedAt = GuildMemberWrapper.getJoinedAt(member)) != null && (user = GuildMemberWrapper.getUser(member)) != null) {
                 var id = new CoreUser(user).getId();
-                cacheData((Long) callFrame.args[1], id, joinedAt.f(), 0);
+                cacheData((Long) callFrame.args[1], id, joinedAt.g(), 0);
                 if (lastRequestedMember == id && forceUpdate != null) {
                     lastRequestedMember = 0;
                     Utils.mainThread.post(forceUpdate);

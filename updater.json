@@ -11,6 +11,10 @@
     "HideDisabledEmojis": {
         "version": "1.0.2"
     },
+    "MessageLogger": {
+        "version": "0.0.2",
+        "minimumDiscordVersion": 86205
+    },
     "MoreSlashCommands": {
         "version": "0.0.5"
     },
@@ -37,7 +41,8 @@
         "version": "1.0.7"
     },
     "UserDetails": {
-        "version": "1.0.7"
+        "version": "1.0.8",
+        "minimumDiscordVersion": 86205
     },
     "ViewRaw": {
         "version": "1.0.4"
