@@ -53,6 +53,9 @@ Removes maximum (and minimum) zoom limit.
 ### [RestoreImageLinks](https://github.com/Juby210/Aliucord-plugins/raw/builds/RestoreImageLinks.zip)
 Restores image links in chat.
 
+### [ShowReplyMention](https://github.com/Juby210/Aliucord-plugins/raw/builds/ShowReplyMention.zip)
+Fixes showing `@` in replies.
+
 ### [SquareAvatars](https://github.com/Juby210/Aliucord-plugins/raw/builds/SquareAvatars.zip)
 Display square avatars instead of circles.
 
