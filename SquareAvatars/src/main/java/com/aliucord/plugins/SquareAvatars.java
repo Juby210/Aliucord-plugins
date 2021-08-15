@@ -11,21 +11,14 @@ import android.util.AttributeSet;
 import androidx.annotation.NonNull;
 
 import com.airbnb.lottie.parser.AnimatableValueParser;
-import com.aliucord.Constants;
-import com.aliucord.Logger;
-import com.aliucord.Main;
-import com.aliucord.Utils;
+import com.aliucord.*;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.patcher.PinePrePatchFn;
-import com.discord.utilities.images.MGImages;
-import com.discord.views.user.UserAvatarPresenceView;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
 
 import c.f.g.f.a;
-import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class SquareAvatars extends Plugin {
@@ -41,7 +34,7 @@ public class SquareAvatars extends Plugin {
     }
 
     @Override
-    public void start(Context ctx) throws Throwable {
+    public void start(Context ctx) {
         var logger = new Logger("SquareAvatars");
 
         float _3dp = Utils.dpToPx(3);

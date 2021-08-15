@@ -18,7 +18,7 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.views.Divider;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 import java.util.Arrays;
 
@@ -32,7 +32,6 @@ public final class PluginSettings extends SettingsPage {
     }
 
     @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void onViewBound(View view) {
         super.onViewBound(view);
         setActionBarTitle(plugin);
@@ -41,7 +40,7 @@ public final class PluginSettings extends SettingsPage {
         var context = view.getContext();
         var layout = getLinearLayout();
 
-        var appearanceHeader = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Header);
+        var appearanceHeader = new TextView(context, null, 0, R.h.UiKit_Settings_Item_Header);
         appearanceHeader.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
         appearanceHeader.setText("Pronouns appearance");
         layout.addView(appearanceHeader);

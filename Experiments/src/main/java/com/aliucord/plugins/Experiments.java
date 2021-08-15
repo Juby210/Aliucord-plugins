@@ -15,7 +15,6 @@ import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.discord.databinding.WidgetSettingsBinding;
 import com.discord.widgets.settings.WidgetSettings;
-import com.discord.widgets.settings.WidgetSettings$Model;
 
 import top.canyie.pine.callback.MethodReplacement;
 
@@ -40,7 +39,7 @@ public class Experiments extends Plugin {
         var getBinding = settingsClass.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
 
-        patcher.patch(settingsClass, "configureUI", new Class<?>[]{ WidgetSettings$Model.class }, new PinePatchFn(callFrame -> {
+        patcher.patch(settingsClass, "configureUI", new Class<?>[]{ WidgetSettings.Model.class }, new PinePatchFn(callFrame -> {
             try {
                 var binding = (WidgetSettingsBinding) getBinding.invoke(callFrame.thisObject);
                 if (binding == null) return;

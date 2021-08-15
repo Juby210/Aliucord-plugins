@@ -24,7 +24,6 @@ import com.discord.models.message.Message;
 import com.discord.stores.*;
 import com.discord.utilities.textprocessing.*;
 import com.discord.utilities.textprocessing.node.EditedMessageNode;
-import com.discord.utilities.textprocessing.node.EditedMessageNode$Companion;
 import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView;
@@ -158,7 +157,6 @@ public final class MessageLogger extends Plugin {
         patcher.patch(WidgetChatListAdapterItemMessage.class, "processMessageText", new Class<?>[]{ SimpleDraweeSpanTextView.class, MessageEntry.class }, new PinePatchFn(callFrame -> {
             var messageEntry = (MessageEntry) callFrame.args[1];
             var message = messageEntry.getMessage();
-            //noinspection ConstantConditions
             if (message == null) return;
             Long channelId = message.getChannelId();
             Long id = message.getId();
@@ -243,8 +241,9 @@ public final class MessageLogger extends Plugin {
         setEditedColor(context, builder, len, builder.length());
     }
 
+    @SuppressWarnings("AccessStaticViaInstance")
     private void setEditedColor(Context context, SpannableStringBuilder builder, int start, int end) {
-        if (start != end) builder.setSpan(EditedMessageNode$Companion.access$getForegroundColorSpan(EditedMessageNode.Companion, context),
+        if (start != end) builder.setSpan(EditedMessageNode.Companion.access$getForegroundColorSpan(EditedMessageNode.Companion, context),
             start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 }

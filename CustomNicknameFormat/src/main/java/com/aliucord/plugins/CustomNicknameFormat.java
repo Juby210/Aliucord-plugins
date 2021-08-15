@@ -26,7 +26,7 @@ import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.user.UserUtils;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
-import com.lytefast.flexinput.R$b;
+import com.lytefast.flexinput.R;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +51,7 @@ public class CustomNicknameFormat extends Plugin {
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             var context = inflater.getContext();
             var layout = new LinearLayout(context);
-            layout.setBackgroundColor(ColorCompat.getThemedColor(context, R$b.colorBackgroundPrimary));
+            layout.setBackgroundColor(ColorCompat.getThemedColor(context, R.b.colorBackgroundPrimary));
 
             var radios = Arrays.asList(
                     Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Nickname (Username)", null),

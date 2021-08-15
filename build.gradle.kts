@@ -23,7 +23,7 @@ allprojects {
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
 
 subprojects {
-    if (name != "Aliucord" && name != "DiscordStubs") {
+    if (name != "Aliucord") {
         apply(plugin = "com.android.library")
 
         android {

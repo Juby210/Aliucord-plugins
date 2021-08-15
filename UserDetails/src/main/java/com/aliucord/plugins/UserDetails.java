@@ -41,9 +41,9 @@ import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
 import com.discord.widgets.user.profile.UserProfileHeaderView;
 import com.discord.widgets.user.profile.UserProfileHeaderViewModel;
-import com.lytefast.flexinput.R$b;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import rx.Subscription;
@@ -67,7 +67,10 @@ public class UserDetails extends Plugin {
     }
 
     @Override
-    public void start(Context ctx) {
+    public void start(Context ctx) throws Throwable {
+        profileHeaderBinding = UserProfileHeaderView.class.getDeclaredField("binding");
+        profileHeaderBinding.setAccessible(true);
+
         patcher.patch(StoreGuilds.class, "handleGuildMember", new Class<?>[]{ GuildMember.class, long.class }, new PinePatchFn(callFrame -> {
             var member = (GuildMember) callFrame.args[0];
             UtcDateTime joinedAt;
@@ -103,6 +106,8 @@ public class UserDetails extends Plugin {
         if (searchSubscription != null) searchSubscription.unsubscribe();
     }
 
+    private Field profileHeaderBinding;
+
     public final Map<Long, Map<Long, CachedData>> cache = new HashMap<>();
     public long lastRequestedMember;
     public long lastRequestedSearch;
@@ -130,7 +135,7 @@ public class UserDetails extends Plugin {
         var settingsHeader = _this.getId() == settingsHeaderId;
         var displayCreatedAt = settings.getBool("createdAt", true);
         if (settingsHeader && !displayCreatedAt) return;
-        var binding = (UserProfileHeaderViewBinding) ReflectUtils.getField(UserProfileHeaderView.class, _this, "binding", true);
+        var binding = (UserProfileHeaderViewBinding) profileHeaderBinding.get(_this);
         if (binding == null) return;
 
         var customStatus = binding.a.findViewById(Utils.getResId("user_profile_header_custom_status", "id"));
@@ -138,9 +143,9 @@ public class UserDetails extends Plugin {
         var context = layout.getContext();
         TextView detailsView = layout.findViewById(viewId);
         if (detailsView == null) {
-            detailsView = new TextView(context, null, 0, R$h.UiKit_TextView_Semibold);
+            detailsView = new TextView(context, null, 0, R.h.UiKit_TextView_Semibold);
             detailsView.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
-            detailsView.setTextColor(ColorCompat.getThemedColor(context, R$b.colorTextMuted));
+            detailsView.setTextColor(ColorCompat.getThemedColor(context, R.b.colorTextMuted));
             detailsView.setId(viewId);
             layout.addView(detailsView, layout.indexOfChild(customStatus));
         }
@@ -173,7 +178,6 @@ public class UserDetails extends Plugin {
                         addDetails(_this, user);
                     } catch (Throwable e) { Main.logger.error(e); }
                 };
-                //noinspection ResultOfMethodCallIgnored
                 StoreStream.getGatewaySocket().requestGuildMembers(gId, null, Collections.singletonList(uId));
             }
         }
@@ -210,9 +214,10 @@ public class UserDetails extends Plugin {
         text.append(lastMessage);
     }
 
+    private SearchFetcher searchFetcher;
     private void search(Long authorId, long id, boolean dm) throws Throwable {
         if (searchSubscription != null) searchSubscription.unsubscribe();
-        var searchFetcher = (SearchFetcher) ReflectUtils.getField(StoreStream.getSearch().getStoreSearchQuery(), "searchFetcher", true);
+        if (searchFetcher == null) searchFetcher = (SearchFetcher) ReflectUtils.getField(StoreStream.getSearch().getStoreSearchQuery(), "searchFetcher");
         var params = new HashMap<String, List<String>>();
         params.put("author_id", Collections.singletonList(authorId.toString()));
         searchSubscription = RxUtils.subscribe(searchFetcher.makeQuery(

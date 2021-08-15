@@ -23,7 +23,7 @@ import com.aliucord.widgets.LinearLayout;
 import com.discord.app.AppBottomSheet;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
-import com.lytefast.flexinput.R$b;
+import com.lytefast.flexinput.R;
 
 import top.canyie.pine.callback.MethodReplacement;
 
@@ -47,7 +47,7 @@ public class RemoveZoomLimit extends Plugin {
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             var context = inflater.getContext();
             var layout = new LinearLayout(context);
-            layout.setBackgroundColor(ColorCompat.getThemedColor(context, R$b.colorBackgroundPrimary));
+            layout.setBackgroundColor(ColorCompat.getThemedColor(context, R.b.colorBackgroundPrimary));
 
             var cs = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Disable max resolution limit", "Warning: It can cause crashes on some devices");
             cs.setChecked(plugin.settings.getBool("removeMaxRes", false));

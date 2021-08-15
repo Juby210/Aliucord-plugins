@@ -24,7 +24,7 @@ import com.discord.widgets.chat.list.entries.MessageEntry;
 import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressLint("SetTextI18n")
-@SuppressWarnings({ "unused", "JavaReflectionMemberAccess" })
+@SuppressWarnings("unused")
 public class ShowReplyMention extends Plugin {
     @NonNull
     @Override

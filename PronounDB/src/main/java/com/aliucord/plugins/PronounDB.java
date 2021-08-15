@@ -31,11 +31,10 @@ import com.discord.widgets.chat.list.entries.ChatListEntry;
 import com.discord.widgets.chat.list.entries.MessageEntry;
 import com.discord.widgets.user.usersheet.WidgetUserSheet;
 import com.discord.widgets.user.usersheet.WidgetUserSheetViewModel;
-import com.lytefast.flexinput.R$b;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 @SuppressLint("SetTextI18n")
-@SuppressWarnings({"unused", "JavaReflectionMemberAccess"})
+@SuppressWarnings("unused")
 public class PronounDB extends Plugin {
     public PronounDB() {
         settingsTab = new SettingsTab(PluginSettings.class).withArgs(settings);
@@ -77,10 +76,10 @@ public class PronounDB extends Plugin {
                 var header = (ConstraintLayout) itemTimestamp.getParent();
                 TextView pronounsView = header.findViewById(viewId);
                 if (pronounsView == null) {
-                    pronounsView = new TextView(header.getContext(), null, 0, R$h.UiKit_TextView);
+                    pronounsView = new TextView(header.getContext(), null, 0, R.h.UiKit_TextView);
                     pronounsView.setId(viewId);
                     pronounsView.setTextSize(12);
-                    pronounsView.setTextColor(ColorCompat.getThemedColor(header.getContext(), R$b.colorTextMuted));
+                    pronounsView.setTextColor(ColorCompat.getThemedColor(header.getContext(), R.b.colorTextMuted));
                     header.addView(pronounsView);
 
                     var set = new ConstraintSet();
@@ -94,7 +93,6 @@ public class PronounDB extends Plugin {
                 }
 
                 var message = ((MessageEntry) callFrame.args[1]).getMessage();
-                //noinspection ConstantConditions
                 if (message == null) return;
                 var user = new CoreUser(message.getAuthor());
                 var bot = user.isBot();
@@ -146,7 +144,7 @@ public class PronounDB extends Plugin {
 
         TextView pronounsView = layout.findViewById(viewId);
         if (pronounsView == null) {
-            pronounsView = new TextView(layout.getContext(), null, 0, R$h.UserProfile_Section_Header);
+            pronounsView = new TextView(layout.getContext(), null, 0, R.h.UserProfile_Section_Header);
             pronounsView.setId(viewId);
             pronounsView.setTypeface(ResourcesCompat.getFont(layout.getContext(), com.aliucord.Constants.Fonts.whitney_semibold));
             pronounsView.setPadding(Utils.dpToPx(16), 0, 0, 0);

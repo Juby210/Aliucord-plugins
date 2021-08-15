@@ -27,14 +27,12 @@ import com.discord.databinding.WidgetChatListActionsBinding;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.simpleast.code.CodeNode;
-import com.discord.simpleast.code.CodeNode$a;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.textprocessing.Rules$createCodeBlockRule$codeStyleProviders$1;
 import com.discord.utilities.textprocessing.node.BasicRenderContext;
 import com.discord.utilities.textprocessing.node.BlockBackgroundNode;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
-import com.lytefast.flexinput.R$b;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 @SuppressWarnings({"unchecked", "unused"})
 public class ViewRaw extends Plugin {
@@ -50,7 +48,6 @@ public class ViewRaw extends Plugin {
 
         @Override
         @SuppressLint("SetTextI18n")
-        @SuppressWarnings("ResultOfMethodCallIgnored")
         public void onViewBound(View view) {
             super.onViewBound(view);
             setActionBarTitle("Raw message by " + new CoreUser(message.getAuthor()).getUsername());
@@ -62,8 +59,8 @@ public class ViewRaw extends Plugin {
             var content = message.getContent();
             if (content != null && !content.equals("")) {
                 var textView = new TextView(context);
-                var node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
-                        new CodeNode$a.b<>(content), "", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
+                var node = new BlockBackgroundNode<>(false, new CodeNode<>(
+                        new CodeNode.a.b(content), "", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
                 ));
                 var builder = new SpannableStringBuilder();
                 node.render(builder, new RenderContext(context));
@@ -73,15 +70,15 @@ public class ViewRaw extends Plugin {
                 layout.addView(new Divider(context));
             }
 
-            var header = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Header);
+            var header = new TextView(context, null, 0, R.h.UiKit_Settings_Item_Header);
             header.setText("All Raw Data");
             header.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
             header.setPadding(0, header.getPaddingTop(), header.getPaddingRight(), header.getPaddingBottom());
             layout.addView(header);
 
             var textView = new TextView(context);
-            var node = new BlockBackgroundNode<>(false, new CodeNode<BasicRenderContext>(
-                    new CodeNode$a.b<>(Utils.toJsonPretty(message)), "json", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
+            var node = new BlockBackgroundNode<>(false, new CodeNode<>(
+                    new CodeNode.a.b(Utils.toJsonPretty(message)), "json", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
             ));
             var builder = new SpannableStringBuilder();
             node.render(builder, new RenderContext(context));
@@ -138,9 +135,9 @@ public class ViewRaw extends Plugin {
         patcher.patch(c, "onViewCreated", new Class<?>[]{ View.class, Bundle.class }, new PinePatchFn(callFrame -> {
             var linearLayout = (LinearLayout) ((NestedScrollView) callFrame.args[0]).getChildAt(0);
             var context = linearLayout.getContext();
-            var viewRaw = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Icon);
+            var viewRaw = new TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon);
             viewRaw.setText("View Raw");
-            if (icon != null) icon.setTint(ColorCompat.getThemedColor(context, R$b.colorInteractiveNormal));
+            if (icon != null) icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal));
             viewRaw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
             viewRaw.setId(id);
             linearLayout.addView(viewRaw);

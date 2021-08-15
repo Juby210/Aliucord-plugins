@@ -1,7 +1,6 @@
 include(":CustomNicknameFormat")
 include(":CustomTimestamps")
 include(":Experiments")
-include(":HideDisabledEmojis")
 include(":MessageLogger")
 include(":MoreSlashCommands")
 include(":NoAutoReplyMention")
@@ -18,5 +17,3 @@ rootProject.name = "plugins"
 
 include(":Aliucord")
 project(":Aliucord").projectDir = File("../repo/Aliucord")
-include(":DiscordStubs")
-project(":DiscordStubs").projectDir = File("../repo/DiscordStubs")

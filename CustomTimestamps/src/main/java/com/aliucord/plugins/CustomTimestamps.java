@@ -26,7 +26,7 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.views.TextInput;
 import com.discord.utilities.time.Clock;
 import com.discord.utilities.time.TimeUtils;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,7 +45,6 @@ public class CustomTimestamps extends Plugin {
         }
 
         @Override
-        @SuppressWarnings("ResultOfMethodCallIgnored")
         public void onViewBound(View view) {
             super.onViewBound(view);
             setActionBarTitle("CustomTimestamps");
@@ -56,7 +55,7 @@ public class CustomTimestamps extends Plugin {
             var layout = getLinearLayout();
 
             var format = settings.getString("format", "dd.MM.yyyy, HH:mm:ss");
-            var guide = new TextView(context, null, 0, R$h.UiKit_Settings_Item_SubText);
+            var guide = new TextView(context, null, 0, R.h.UiKit_Settings_Item_SubText);
             setPreview(format, guide);
             guide.setMovementMethod(LinkMovementMethod.getInstance());
 
