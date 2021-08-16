@@ -17,22 +17,28 @@ import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
-import com.aliucord.Constants;
-import com.aliucord.Utils;
+import com.aliucord.*;
 import com.aliucord.entities.Plugin;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.utils.ReflectUtils;
 import com.aliucord.views.Divider;
 import com.discord.databinding.WidgetChatListActionsBinding;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.simpleast.code.CodeNode;
+import com.discord.simpleast.core.node.Node;
+import com.discord.simpleast.core.parser.Parser;
+import com.discord.simpleast.core.parser.Rule;
 import com.discord.utilities.color.ColorCompat;
-import com.discord.utilities.textprocessing.Rules$createCodeBlockRule$codeStyleProviders$1;
+import com.discord.utilities.textprocessing.*;
 import com.discord.utilities.textprocessing.node.BasicRenderContext;
 import com.discord.utilities.textprocessing.node.BlockBackgroundNode;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R;
+
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"unchecked", "unused"})
 public class ViewRaw extends Plugin {
@@ -59,11 +65,8 @@ public class ViewRaw extends Plugin {
             var content = message.getContent();
             if (content != null && !content.equals("")) {
                 var textView = new TextView(context);
-                var node = new BlockBackgroundNode<>(false, new CodeNode<>(
-                        new CodeNode.a.b(content), "", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
-                ));
                 var builder = new SpannableStringBuilder();
-                node.render(builder, new RenderContext(context));
+                renderCodeBlock(context, builder, content, false);
                 textView.setText(builder);
                 textView.setTextIsSelectable(true);
                 layout.addView(textView);
@@ -77,11 +80,8 @@ public class ViewRaw extends Plugin {
             layout.addView(header);
 
             var textView = new TextView(context);
-            var node = new BlockBackgroundNode<>(false, new CodeNode<>(
-                    new CodeNode.a.b(Utils.toJsonPretty(message)), "json", Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
-            ));
             var builder = new SpannableStringBuilder();
-            node.render(builder, new RenderContext(context));
+            renderCodeBlock(context, builder, Utils.toJsonPretty(message), true);
             textView.setText(builder);
             textView.setTextIsSelectable(true);
             layout.addView(textView);
@@ -106,7 +106,7 @@ public class ViewRaw extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "View & Copy raw message and markdown.";
-        manifest.version = "1.0.4";
+        manifest.version = "1.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
         return manifest;
     }
@@ -147,5 +147,27 @@ public class ViewRaw extends Plugin {
     @Override
     public void stop(Context context) {
         patcher.unpatchAll();
+    }
+
+    private static Parser<MessageRenderContext, Node<MessageRenderContext>, MessageParseState> parser;
+    private static List<? extends Rule<MessageRenderContext, ? extends Node<MessageRenderContext>, MessageParseState>> jsRules;
+
+    public static void renderCodeBlock(Context context, SpannableStringBuilder builder, String content, boolean js) {
+        if (js && jsRules == null) try {
+            parser = (Parser<MessageRenderContext, Node<MessageRenderContext>, MessageParseState>) ReflectUtils.getField(DiscordParser.class, null, "SAFE_LINK_PARSER");
+            var languageRules = (Map<String, List<? extends Rule<MessageRenderContext, ? extends Node<MessageRenderContext>, MessageParseState>>>) ReflectUtils.getField(Rules.INSTANCE.createCodeBlockRule(), "a");
+            //noinspection ConstantConditions
+            jsRules = languageRules.get("js");
+        } catch (Throwable e) {
+            Main.logger.error("Failed to get parser and js rules", e);
+        }
+        var node = new BlockBackgroundNode<>(false, new CodeNode<>(
+            js && jsRules != null ?
+                new CodeNode.a.a<>(content, parser.parse(content, MessageParseState.access$getInitialState$cp(), jsRules)) :
+                new CodeNode.a.b(content),
+            js ? "js" : null,
+            Rules$createCodeBlockRule$codeStyleProviders$1.INSTANCE
+        ));
+        node.render(builder, new RenderContext(context));
     }
 }
