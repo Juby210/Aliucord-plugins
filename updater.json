@@ -49,7 +49,7 @@
         "minimumDiscordVersion": 86205
     },
     "ViewRaw": {
-        "version": "1.0.4"
+        "version": "1.0.5"
     },
     "default": {
         "minimumDiscordVersion": 83210,
