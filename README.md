@@ -4,6 +4,10 @@ Plugins for [Aliucord](https://github.com/Aliucord)
 #### How To Download
 Click on plugin name in README, move downloaded file to `Aliucord/plugins` folder.
 
+### [BetterCodeBlocks](https://github.com/Juby210/Aliucord-plugins/raw/builds/BetterCodeBlocks.zip)
+Makes codeblocks better by adding new languages, improving already existing and more.
+Uses parts of [Markwon](https://github.com/noties/Markwon) and [Prism4j](https://github.com/noties/Prism4j), licensed under Apache-2.0 License.
+
 ### [CustomNicknameFormat](https://github.com/Juby210/Aliucord-plugins/raw/builds/CustomNicknameFormat.zip)
 Allows you to customize nickname format.
 
