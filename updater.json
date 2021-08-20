@@ -1,4 +1,8 @@
 {
+    "BetterCodeBlocks": {
+        "version": "1.0.0",
+        "minimumDiscordVersion": 88202
+    },
     "CustomNicknameFormat": {
         "version": "1.0.2"
     },
