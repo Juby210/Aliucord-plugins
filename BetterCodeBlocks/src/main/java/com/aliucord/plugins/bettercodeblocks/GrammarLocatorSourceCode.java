@@ -79,6 +79,9 @@ public final class GrammarLocatorSourceCode implements GrammarLocator {
             case "jsonp":
                 out = "json";
                 break;
+            case "py":
+                out = "python";
+                break;
             default:
                 out = name;
         }
