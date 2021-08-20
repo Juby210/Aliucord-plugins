@@ -16,7 +16,6 @@ import io.noties.prism4j.Prism4j;
 import io.noties.prism4j.languages.*;
 
 public final class GrammarLocatorSourceCode implements GrammarLocator {
-
     @SuppressWarnings("ConstantConditions")
     private static final Prism4j.Grammar NULL =
         new Prism4j.Grammar() {
@@ -60,8 +59,9 @@ public final class GrammarLocatorSourceCode implements GrammarLocator {
         return grammar;
     }
 
+    // added cs -> csharp, py -> python
     @NonNull
-    protected String realLanguageName(@NonNull String name) {
+    public static String realLanguageName(@NonNull String name) {
         final String out;
         switch (name) {
             case "js":
@@ -73,6 +73,7 @@ public final class GrammarLocatorSourceCode implements GrammarLocator {
             case "svg":
                 out = "markup";
                 break;
+            case "cs":
             case "dotnet":
                 out = "csharp";
                 break;
@@ -188,7 +189,7 @@ public final class GrammarLocatorSourceCode implements GrammarLocator {
     @Override
     @NonNull
     public Set<String> languages() {
-        final Set<String> set = new HashSet<String>(25);
+        final Set<String> set = new HashSet<>(25);
         set.add("brainfuck");
         set.add("c");
         set.add("clike");

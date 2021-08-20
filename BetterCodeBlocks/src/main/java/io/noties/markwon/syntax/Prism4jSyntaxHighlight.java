@@ -26,20 +26,11 @@ import androidx.annotation.Nullable;
 import io.noties.prism4j.Prism4j;
 
 public class Prism4jSyntaxHighlight {
-
     @NonNull
     public static Prism4jSyntaxHighlight create(
             @NonNull Prism4j prism4j,
             @NonNull Prism4jTheme theme) {
         return new Prism4jSyntaxHighlight(prism4j, theme, null);
-    }
-
-    @NonNull
-    public static Prism4jSyntaxHighlight create(
-            @NonNull Prism4j prism4j,
-            @NonNull Prism4jTheme theme,
-            @Nullable String fallback) {
-        return new Prism4jSyntaxHighlight(prism4j, theme, fallback);
     }
 
     private final Prism4j prism4j;
@@ -109,10 +100,5 @@ public class Prism4jSyntaxHighlight {
         final Prism4jSyntaxVisitor visitor = new Prism4jSyntaxVisitor(language, theme, builder);
         visitor.visit(prism4j.tokenize(code, grammar));
         return builder;
-    }
-
-    @NonNull
-    protected Prism4j prism4j() {
-        return prism4j;
     }
 }
