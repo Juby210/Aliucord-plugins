@@ -16,5 +16,5 @@ include(":UserDetails")
 include(":ViewRaw")
 rootProject.name = "plugins"
 
-include(":Aliucord")
-project(":Aliucord").projectDir = File("../repo/Aliucord")
+// include(":Aliucord")
+// project(":Aliucord").projectDir = File("../repo/Aliucord")
