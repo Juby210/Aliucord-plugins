@@ -37,14 +37,15 @@ public class BetterCodeBlocks extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[]{ new Manifest.Author("Juby210", 324622488644616195L) };
         manifest.description = "Makes codeblocks better by adding new languages, improving already existing and more.";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json";
+        manifest.changelog = "Improved {improved marginTop}\n======================\n\n* added **kt** alias to **kotlin**";
         return manifest;
     }
 
     @Override
     public void start(Context context) throws Throwable {
-        highlight = Prism4jSyntaxHighlight.create(new Prism4j(new GrammarLocatorSourceCode()), new Prism4jThemeDarkula());
+        highlight = Prism4jSyntaxHighlight.create(new Prism4j(new GrammarLocatorImpl()), new Prism4jThemeDarkula());
 
         patcher.patch(c.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PinePrePatchFn(callFrame -> {
             var matcher = (Matcher) callFrame.args[0];
