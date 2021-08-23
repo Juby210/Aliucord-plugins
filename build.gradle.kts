@@ -2,13 +2,15 @@ import com.android.build.gradle.BaseExtension
 
 buildscript {
     repositories {
+        // mavenLocal()
         google()
         mavenCentral()
         maven("https://jitpack.io")
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.1")
-        classpath("com.github.Aliucord:gradle:master-SNAPSHOT")
+        classpath("com.github.Aliucord:gradle:main-SNAPSHOT")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
     }
 }
 
@@ -25,6 +27,7 @@ fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByN
 subprojects {
     apply(plugin = "com.android.library")
     apply(plugin = "com.aliucord.gradle")
+    if (name == "ViewRaw") apply(plugin = "kotlin-android")
 
     android {
         compileSdkVersion(30)
@@ -32,8 +35,6 @@ subprojects {
         defaultConfig {
             minSdk = 24
             targetSdk = 30
-            versionCode = 1
-            versionName = "1.0"
         }
 
         compileOptions {
