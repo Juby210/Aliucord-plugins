@@ -17,7 +17,6 @@ import androidx.core.widget.NestedScrollView
 import com.aliucord.Constants
 import com.aliucord.Utils
 import com.aliucord.entities.Plugin
-import com.aliucord.entities.Plugin.Manifest.Author
 import com.aliucord.fragments.SettingsPage
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.utils.GsonUtils
@@ -69,7 +68,7 @@ class ViewRaw : Plugin() {
   }
 
   override fun getManifest() = Manifest().apply {
-    authors = arrayOf(Author("Juby210", 324622488644616195L))
+    authors = arrayOf(Manifest.Author("Juby210", 324622488644616195L))
     description = "View & Copy raw message and markdown."
     version = "1.0.5"
     updateUrl = "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/updater.json"
