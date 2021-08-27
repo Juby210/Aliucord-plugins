@@ -16,8 +16,7 @@
         "version": "1.0.2"
     },
     "MessageLogger": {
-        "version": "0.0.2",
-        "minimumDiscordVersion": 86205
+        "version": "0.0.2"
     },
     "MoreSlashCommands": {
         "version": "0.0.5"
@@ -38,25 +37,22 @@
         "version": "1.0.1"
     },
     "ShowReplyMention": {
-        "version": "1.0.0",
-        "minimumDiscordVersion": 86205
+        "version": "1.0.0"
     },
     "SquareAvatars": {
-        "version": "0.0.10",
-        "minimumDiscordVersion": 81110
+        "version": "0.0.10"
     },
     "Tags": {
         "version": "1.0.7"
     },
     "UserDetails": {
-        "version": "1.0.8",
-        "minimumDiscordVersion": 86205
+        "version": "1.1.0"
     },
     "ViewRaw": {
         "version": "1.0.5"
     },
     "default": {
-        "minimumDiscordVersion": 83210,
+        "minimumDiscordVersion": 89108,
         "version": "1.0.0",
         "build": "https://raw.githubusercontent.com/Juby210/Aliucord-plugins/builds/%s.zip"
     }

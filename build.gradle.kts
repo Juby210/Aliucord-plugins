@@ -10,7 +10,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.1")
         classpath("com.github.Aliucord:gradle:main-SNAPSHOT")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.30")
     }
 }
 
@@ -55,14 +55,14 @@ subprojects {
 
     dependencies {
         val discord by configurations
-        val implementation by configurations
+        val compileOnly by configurations
 
         discord("com.discord:discord:aliucord-SNAPSHOT")
-        implementation("com.github.Aliucord:Aliucord:main-SNAPSHOT")
+        compileOnly("com.github.Aliucord:Aliucord:main-SNAPSHOT")
 
-        implementation("androidx.appcompat:appcompat:1.3.1")
-        implementation("com.google.android.material:material:1.4.0")
-        implementation("androidx.constraintlayout:constraintlayout:2.1.0")
+        compileOnly("androidx.appcompat:appcompat:1.3.1")
+        compileOnly("com.google.android.material:material:1.4.0")
+        compileOnly("androidx.constraintlayout:constraintlayout:2.1.0")
     }
 }
 
