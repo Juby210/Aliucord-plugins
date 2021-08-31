@@ -7,9 +7,7 @@ package com.aliucord.plugins.userdetails
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.aliucord.Utils
 import com.aliucord.api.SettingsAPI
 import com.aliucord.widgets.LinearLayout
@@ -21,7 +19,7 @@ import com.lytefast.flexinput.R
 class PluginSettings(private val settings: SettingsAPI) : AppBottomSheet() {
     override fun getContentViewResId() = 0
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View {
         val context = inflater.context
         val layout = LinearLayout(context)
         layout.setBackgroundColor(ColorCompat.getThemedColor(context, R.b.colorBackgroundPrimary))
