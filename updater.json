@@ -10,7 +10,8 @@
         "version": "1.0.4"
     },
     "Experiments": {
-        "version": "1.0.3"
+        "version": "1.0.4",
+        "changelog": "Added {added marginTop}\n======================\n\n* added option to sort experiments by date"
     },
     "HideDisabledEmojis": {
         "version": "1.0.2"
