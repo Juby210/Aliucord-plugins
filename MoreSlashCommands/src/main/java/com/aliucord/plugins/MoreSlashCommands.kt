@@ -46,6 +46,9 @@ class MoreSlashCommands : Plugin() {
       for (a in ctx.attachments) displayName[a] = "SPOILER_" + a.displayName
       CommandResult(ctx.getStringOrDefault("message", ""))
     }
+
+    commands.registerCommand("reverse", "Makes text reversed", listOf(CommandsAPI.requiredMessageOption)) {ctx ->
+      CommandResult(ctx.getRequiredString("message").reversed()) }
   }
 
   override fun stop(context: Context?) = commands.unregisterAll()
