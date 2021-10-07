@@ -17,9 +17,6 @@ Custom timestamps format everywhere.
 ### [Experiments](https://github.com/Juby210/Aliucord-plugins/raw/builds/Experiments.zip)
 Shows hidden Developer Options tab with Experiments.
 
-### [HideDisabledEmojis](https://github.com/Juby210/Aliucord-plugins/raw/builds/HideDisabledEmojis.zip)
-Hides disabled emojis in emoji picker and autocomplete.
-
 ### [MessageLogger](https://github.com/Juby210/Aliucord-plugins/raw/builds/MessageLogger.zip)
 Temporary saves deleted and edited messages. WIP. Released version without all planned features because a lot of people asked.
 
