@@ -38,6 +38,7 @@ Commands:
 - owofiy
 - upper
 - lower
+- reverse
 
 ### [NoAutoReplyMention](https://github.com/Juby210/Aliucord-plugins/raw/builds/NoAutoReplyMention.zip)
 Disables reply mention by default.
