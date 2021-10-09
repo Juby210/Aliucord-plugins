@@ -21,7 +21,8 @@ import com.aliucord.Main;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
+import com.aliucord.utils.DimenUtils;
 import com.discord.databinding.WidgetUserSheetBinding;
 import com.discord.models.user.CoreUser;
 import com.discord.utilities.color.ColorCompat;
@@ -59,9 +60,9 @@ public class PronounDB extends Plugin {
         var itemTimestampField = WidgetChatListAdapterItemMessage.class.getDeclaredField("itemTimestamp");
         itemTimestampField.setAccessible(true);
 
-        patcher.patch(WidgetChatListAdapterItemMessage.class, "onConfigure", new Class<?>[]{ int.class, ChatListEntry.class }, new PinePatchFn(callFrame -> {
+        patcher.patch(WidgetChatListAdapterItemMessage.class, "onConfigure", new Class<?>[]{ int.class, ChatListEntry.class }, new Hook(param -> {
             try {
-                var itemTimestamp = (TextView) itemTimestampField.get(callFrame.thisObject);
+                var itemTimestamp = (TextView) itemTimestampField.get(param.thisObject);
                 if (itemTimestamp == null) return;
 
                 var header = (ConstraintLayout) itemTimestamp.getParent();
@@ -83,7 +84,7 @@ public class PronounDB extends Plugin {
                     set.applyTo(header);
                 }
 
-                var message = ((MessageEntry) callFrame.args[1]).getMessage();
+                var message = ((MessageEntry) param.args[1]).getMessage();
                 if (message == null) return;
                 var user = new CoreUser(message.getAuthor());
                 var bot = user.isBot();
@@ -100,13 +101,13 @@ public class PronounDB extends Plugin {
     }
 
     private void injectProfile() {
-        patcher.patch(WidgetUserSheet.class, "configureNote", new Class<?>[]{ WidgetUserSheetViewModel.ViewState.Loaded.class }, new PinePatchFn(callFrame -> {
-            var state = (WidgetUserSheetViewModel.ViewState.Loaded) callFrame.args[0];
+        patcher.patch(WidgetUserSheet.class, "configureNote", new Class<?>[]{ WidgetUserSheetViewModel.ViewState.Loaded.class }, new Hook(param -> {
+            var state = (WidgetUserSheetViewModel.ViewState.Loaded) param.args[0];
             var user = state.getUser();
             if (user == null || user.isBot()) return;
             Long userId = user.getId();
 
-            var binding = WidgetUserSheet.access$getBinding$p((WidgetUserSheet) callFrame.thisObject);
+            var binding = WidgetUserSheet.access$getBinding$p((WidgetUserSheet) param.thisObject);
             if (!Store.cache.containsKey(userId)) new Thread(() -> {
                 Store.fetchPronouns(userId);
                 new Handler(Looper.getMainLooper()).post(() -> addPronounsToUserSheet(binding, userId));
@@ -138,7 +139,7 @@ public class PronounDB extends Plugin {
             pronounsView = new TextView(layout.getContext(), null, 0, R.h.UserProfile_Section_Header);
             pronounsView.setId(viewId);
             pronounsView.setTypeface(ResourcesCompat.getFont(layout.getContext(), com.aliucord.Constants.Fonts.whitney_semibold));
-            pronounsView.setPadding(Utils.dpToPx(16), 0, 0, 0);
+            pronounsView.setPadding(DimenUtils.dpToPx(16), 0, 0, 0);
             layout.addView(pronounsView, layout.indexOfChild(noteHeader));
         }
         pronounsView.setText("Pronouns • " + Constants.getPronouns(c, settings.getInt("format", 0)));
