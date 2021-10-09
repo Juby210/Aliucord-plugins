@@ -9,10 +9,12 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.airbnb.lottie.parser.AnimatableValueParser;
-import com.aliucord.*;
+import com.aliucord.Constants;
+import com.aliucord.Logger;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
+import com.aliucord.utils.DimenUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -21,12 +23,12 @@ import c.f.g.f.a;
 
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class SquareAvatars extends Plugin {
+public final class SquareAvatars extends Plugin {
     @Override
     public void start(Context ctx) {
         var logger = new Logger("SquareAvatars");
 
-        float _3dp = Utils.dpToPx(3);
+        float _3dp = DimenUtils.dpToPx(3);
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
@@ -34,16 +36,16 @@ public class SquareAvatars extends Plugin {
             var params = m.getParameterTypes();
             if (params.length == 3 && params[2] == AttributeSet.class && params[1] == Context.class) {
                 logger.debug("Found obfuscated updateBuilder method: " + m.getName());
-                patcher.patch(m, new PinePatchFn(callFrame -> {
-                    var attrs = (AttributeSet) callFrame.args[2];
+                patcher.patch(m, new Hook(param -> {
+                    var attrs = (AttributeSet) param.args[2];
                     if (attrs == null) return;
 
                     try {
-                        var builder = (a) callFrame.getResult();
+                        var builder = (a) param.getResult();
                         var roundingParams = builder.r;
 
                         if (roundingParams != null && roundingParams.b) {
-                            var context = (Context) callFrame.args[1];
+                            var context = (Context) param.args[1];
                             var id = attrs.getAttributeResourceValue(Constants.NAMESPACE_ANDROID, "id", 0);
                             if (id != 0 && contains(context.getResources().getResourceName(id))) {
                                 roundingParams.b = false;

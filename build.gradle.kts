@@ -66,12 +66,12 @@ subprojects {
         val discord by configurations
         val compileOnly by configurations
 
-        discord("com.discord:discord:aliucord-SNAPSHOT")
+        discord("com.discord:discord:96103")
         compileOnly("com.github.Aliucord:Aliucord:main-SNAPSHOT")
 
         compileOnly("androidx.appcompat:appcompat:1.3.1")
         compileOnly("com.google.android.material:material:1.4.0")
-        compileOnly("androidx.constraintlayout:constraintlayout:2.1.0")
+        compileOnly("androidx.constraintlayout:constraintlayout:2.1.1")
     }
 }
 
