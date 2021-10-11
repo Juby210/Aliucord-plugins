@@ -19,18 +19,18 @@ import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
+import com.aliucord.patcher.InsteadHook;
 import com.aliucord.widgets.LinearLayout;
 import com.discord.app.AppBottomSheet;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
+import com.discord.widgets.media.WidgetMedia;
 import com.lytefast.flexinput.R;
-
-import top.canyie.pine.callback.MethodReplacement;
 
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class RemoveZoomLimit extends Plugin {
+public final class RemoveZoomLimit extends Plugin {
     public RemoveZoomLimit() {
         settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(this);
     }
@@ -64,19 +64,19 @@ public class RemoveZoomLimit extends Plugin {
     }
 
     @Override
-    public void start(Context context) {
+    public void start(Context context) throws Throwable {
         // load full resolution to see details while zooming
-        patcher.patch("com.discord.widgets.media.WidgetMedia", "getFormattedUrl", new Class<?>[]{ Context.class, Uri.class }, new PinePatchFn(callFrame -> {
-            var res = (String) callFrame.getResult();
+        patcher.patch(WidgetMedia.class, "getFormattedUrl", new Class<?>[]{ Context.class, Uri.class }, new Hook(param -> {
+            var res = (String) param.getResult();
             if (res.contains(".discordapp.net/")) {
                 var arr = res.split("\\?");
-                callFrame.setResult(arr[0] + (arr[1].contains("format=") ? "?format=" + arr[1].split("format=")[1] : ""));
+                param.setResult(arr[0] + (arr[1].contains("format=") ? "?format=" + arr[1].split("format=")[1] : ""));
             }
         }));
 
         // com.facebook.samples.zoomable.DefaultZoomableController limitScale
         // https://github.com/facebook/fresco/blob/master/samples/zoomable/src/main/java/com/facebook/samples/zoomable/DefaultZoomableController.java#L474-L495
-        patcher.patch("c.f.l.b.c", "f", new Class<?>[]{ Matrix.class, float.class, float.class, int.class }, MethodReplacement.returnConstant(false));
+        patcher.patch(c.f.l.b.c.class.getDeclaredMethod("f", Matrix.class, float.class, float.class, int.class), InsteadHook.returnConstant(false));
 
         removeMaxRes();
     }
@@ -96,7 +96,7 @@ public class RemoveZoomLimit extends Plugin {
                 var params = m.getParameterTypes();
                 if (params.length == 4 && params[0] == c.f.j.d.f.class && params[1] == c.f.j.d.e.class && params[3] == int.class) {
                     Utils.log("[RemoveZoomLimit] Found obfuscated method to limit resolution: " + m.getName());
-                    maxResUnpatch = patcher.patch(m, MethodReplacement.returnConstant(1));
+                    maxResUnpatch = patcher.patch(m, InsteadHook.returnConstant(1));
                     break;
                 }
             }

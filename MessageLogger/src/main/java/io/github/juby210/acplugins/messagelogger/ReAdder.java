@@ -7,7 +7,7 @@ package io.github.juby210.acplugins.messagelogger;
 
 import com.aliucord.CollectionUtils;
 import com.aliucord.api.PatcherAPI;
-import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.patcher.PreHook;
 import com.discord.models.message.Message;
 import com.discord.utilities.message.MessageUtils;
 
@@ -27,16 +27,16 @@ public final class ReAdder {
             "com.discord.stores.StoreMessagesLoader",
             "handleLoadedMessages",
             new Class<?>[]{ List.class, long.class, long.class, Long.class, Long.class },
-            new PinePrePatchFn(callFrame -> {
-                var messages = (List<Message>) callFrame.args[0];
-                var channelId = (Long) callFrame.args[1];
-                var jump = (long) callFrame.args[2] != 0;
-                var isBefore = callFrame.args[3] != null;
-                var isAfter = callFrame.args[4] != null;
+            new PreHook(param -> {
+                var messages = (List<Message>) param.args[0];
+                var channelId = (Long) param.args[1];
+                var jump = (long) param.args[2] != 0;
+                var isBefore = param.args[3] != null;
+                var isAfter = param.args[4] != null;
                 var defaultLimit = messages.size() == 50;
                 var hasMoreBefore = jump || defaultLimit && isBefore;
                 var hasMoreAfter = jump || defaultLimit && isAfter;
-                callFrame.args[0] = reAddDeletedMessages(messages, channelId, !hasMoreAfter && !isBefore, !hasMoreBefore && !isAfter);
+                param.args[0] = reAddDeletedMessages(messages, channelId, !hasMoreAfter && !isBefore, !hasMoreBefore && !isAfter);
             })
         );
     }

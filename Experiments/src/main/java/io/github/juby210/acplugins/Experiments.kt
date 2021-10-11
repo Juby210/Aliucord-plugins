@@ -11,8 +11,7 @@ import android.view.*
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.PinePatchFn
-import com.aliucord.patcher.PinePrePatchFn
+import com.aliucord.patcher.*
 import com.aliucord.widgets.LinearLayout
 import com.discord.app.AppBottomSheet
 import com.discord.databinding.WidgetSettingsBinding
@@ -22,7 +21,6 @@ import com.discord.views.CheckedSetting
 import com.discord.widgets.settings.WidgetSettings
 import com.discord.widgets.settings.developer.ExperimentOverridesAdapter
 import com.lytefast.flexinput.R
-import top.canyie.pine.callback.MethodReplacement
 
 @AliucordPlugin
 @Suppress("UNCHECKED_CAST", "unused")
@@ -56,11 +54,11 @@ class Experiments : Plugin() {
     }
 
     override fun start(context: Context?) {
-        patcher.patch(`StoreExperiments$getExperimentalAlpha$1`::class.java.getDeclaredMethod("invoke"), MethodReplacement.returnConstant(true))
+        patcher.patch(`StoreExperiments$getExperimentalAlpha$1`::class.java.getDeclaredMethod("invoke"), InsteadHook.returnConstant(true))
 
         val c = WidgetSettings::class.java
         val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
-        patcher.patch(c.getDeclaredMethod("configureUI", WidgetSettings.Model::class.java), PinePatchFn {
+        patcher.patch(c.getDeclaredMethod("configureUI", WidgetSettings.Model::class.java), Hook {
             val binding = getBinding.invoke(it.thisObject) as WidgetSettingsBinding
             binding.n.visibility = View.VISIBLE
             binding.o.visibility = View.VISIBLE
@@ -77,7 +75,7 @@ class Experiments : Plugin() {
 
     var sortUnpatch: Runnable? = null
     fun sortExperiments() {
-        sortUnpatch = patcher.patch(ExperimentOverridesAdapter::class.java.getDeclaredMethod("setData", List::class.java), PinePrePatchFn {
+        sortUnpatch = patcher.patch(ExperimentOverridesAdapter::class.java.getDeclaredMethod("setData", List::class.java), PreHook {
             val list = it.args[0] as MutableList<ExperimentOverridesAdapter.Item>
             list.sortWith { a, b -> b.apiName.compareTo(a.apiName) }
         })

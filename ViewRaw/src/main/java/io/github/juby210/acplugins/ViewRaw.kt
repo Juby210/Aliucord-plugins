@@ -19,7 +19,7 @@ import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.aliucord.fragments.SettingsPage
-import com.aliucord.patcher.PinePatchFn
+import com.aliucord.patcher.Hook
 import com.aliucord.utils.GsonUtils
 import com.aliucord.utils.MDUtils
 import com.aliucord.views.Divider
@@ -79,7 +79,7 @@ class ViewRaw : Plugin() {
     val c = WidgetChatListActions::class.java
     val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
 
-    patcher.patch(c.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), PinePatchFn {
+    patcher.patch(c.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), Hook {
         val binding = getBinding.invoke(it.thisObject) as WidgetChatListActionsBinding
         val viewRaw = binding.a.findViewById<TextView>(viewId)
         viewRaw.setOnClickListener { e ->
@@ -87,7 +87,7 @@ class ViewRaw : Plugin() {
         }
     })
 
-    patcher.patch(c, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), PinePatchFn {
+    patcher.patch(c, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
         val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
         val context = linearLayout.context
         icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))

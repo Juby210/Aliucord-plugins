@@ -9,21 +9,21 @@ import android.content.Context;
 
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.patcher.PreHook;
 import com.discord.api.channel.Channel;
 import com.discord.models.message.Message;
 
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class NoAutoReplyMention extends Plugin {
+public final class NoAutoReplyMention extends Plugin {
     @Override
     public void start(Context context) {
         patcher.patch(
             "com.discord.stores.StorePendingReplies", "onCreatePendingReply",
             new Class<?>[]{ Channel.class, Message.class, boolean.class, boolean.class },
-            new PinePrePatchFn(callFrame -> {
-                callFrame.args[2] = false; // mention
-                callFrame.args[3] = true;  // showMentionToggle
+            new PreHook(param -> {
+                param.args[2] = false; // mention
+                param.args[3] = true;  // showMentionToggle
             })
         );
     }

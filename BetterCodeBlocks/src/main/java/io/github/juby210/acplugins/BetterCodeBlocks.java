@@ -10,7 +10,7 @@ import android.text.SpannableStringBuilder;
 
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.patcher.PreHook;
 import com.aliucord.utils.MDUtils;
 import com.discord.simpleast.code.CodeNode;
 import com.discord.simpleast.core.node.Node;
@@ -30,41 +30,41 @@ import io.noties.prism4j.Prism4j;
 
 @AliucordPlugin
 @SuppressWarnings({ "unchecked", "unused" })
-public class BetterCodeBlocks extends Plugin {
+public final class BetterCodeBlocks extends Plugin {
     @Override
     public void start(Context context) throws Throwable {
         highlight = Prism4jSyntaxHighlight.create(new Prism4j(new GrammarLocatorImpl()), new Prism4jThemeDarkula());
 
-        patcher.patch(c.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PinePrePatchFn(callFrame -> {
-            var matcher = (Matcher) callFrame.args[0];
+        patcher.patch(c.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PreHook(param -> {
+            var matcher = (Matcher) param.args[0];
             if (matcher == null) return;
             var lang = (String) matcher.group(1);
             if (lang != null && blacklist.contains(lang)) return;
-            callFrame.setResult(new ParseSpec<>(
-                renderCodeBlock(lang, matcher.group(3)), callFrame.args[2]
+            param.setResult(new ParseSpec<>(
+                renderCodeBlock(lang, matcher.group(3)), param.args[2]
             ));
         }));
 
-        patcher.patch(BlockBackgroundNode.class.getDeclaredConstructor(boolean.class, Node[].class), new PinePrePatchFn(callFrame -> {
-            var nodes = (Node<BasicRenderContext>[]) callFrame.args[1];
+        patcher.patch(BlockBackgroundNode.class.getDeclaredConstructor(boolean.class, Node[].class), new PreHook(param -> {
+            var nodes = (Node<BasicRenderContext>[]) param.args[1];
             if (nodes.length == 1 && nodes[0] instanceof CodeNode) {
                 nodes[0] = new LangNode<>(((CodeNode<BasicRenderContext>) nodes[0]).a, nodes[0]);
-                callFrame.args[1] = nodes;
+                param.args[1] = nodes;
             }
         }));
 
         patcher.patch(MDUtils.class.getDeclaredMethod("renderCodeBlock", Context.class, SpannableStringBuilder.class, String.class, String.class),
-            new PinePrePatchFn(callFrame -> {
-                var lang = (String) callFrame.args[2];
+            new PreHook(param -> {
+                var lang = (String) param.args[2];
                 if (lang != null && blacklist.contains(lang)) return;
 
-                var builder = (SpannableStringBuilder) callFrame.args[1];
+                var builder = (SpannableStringBuilder) param.args[1];
                 int a = builder.length();
-                var rendered = render(lang, (String) callFrame.args[3]);
-                var ctx = (Context) callFrame.args[0];
+                var rendered = render(lang, (String) param.args[3]);
+                var ctx = (Context) param.args[0];
                 wrapInNodes(lang, rendered).render(builder, new MDUtils.RenderContext(ctx));
                 if (rendered instanceof String) Utils.fixColor(builder, ctx, a);
-                callFrame.setResult(builder);
+                param.setResult(builder);
             })
         );
     }

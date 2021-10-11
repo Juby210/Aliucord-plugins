@@ -18,7 +18,7 @@ import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.SettingsAPI
 import com.aliucord.entities.Plugin
 import com.aliucord.fragments.SettingsPage
-import com.aliucord.patcher.PinePatchFn
+import com.aliucord.patcher.Hook
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.TextInput
 import com.discord.utilities.time.Clock
@@ -83,7 +83,7 @@ class CustomTimestamps : Plugin() {
   override fun start(context: Context?) {
     patcher.patch(
       TimeUtils::class.java.getDeclaredMethod("toReadableTimeString", Context::class.java, Long::class.javaPrimitiveType, Clock::class.java),
-        PinePatchFn { it.result = format(settings.getString("format", defaultFormat), it.args[1] as Long) }
+        Hook { it.result = format(settings.getString("format", defaultFormat), it.args[1] as Long) }
     )
   }
 

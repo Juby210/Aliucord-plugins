@@ -10,15 +10,15 @@ import android.widget.TextView;
 
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-
-import top.canyie.pine.callback.MethodReplacement;
+import com.aliucord.patcher.InsteadHook;
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed$1;
 
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class NoCopyEmbeds extends Plugin {
+public final class NoCopyEmbeds extends Plugin {
     @Override
     public void start(Context context) {
-        patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed$1", "invoke", new Class<?>[]{ TextView.class }, MethodReplacement.DO_NOTHING);
+        patcher.patch(WidgetChatListAdapterItemEmbed$1.class, "invoke", new Class<?>[]{ TextView.class }, InsteadHook.DO_NOTHING);
     }
 
     @Override

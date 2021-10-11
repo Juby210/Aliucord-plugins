@@ -17,7 +17,7 @@ import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
 import com.aliucord.widgets.LinearLayout;
 import com.discord.api.channel.Channel;
 import com.discord.app.AppBottomSheet;
@@ -34,7 +34,7 @@ import java.util.List;
 
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class CustomNicknameFormat extends Plugin {
+public final class CustomNicknameFormat extends Plugin {
     public CustomNicknameFormat() {
         settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings);
     }
@@ -86,13 +86,13 @@ public class CustomNicknameFormat extends Plugin {
     @Override
     public void start(Context context) {
         patcher.patch(GuildMember.Companion.getClass(), "getNickOrUsername", new Class<?>[]{ User.class, GuildMember.class, Channel.class, List.class },
-            new PinePatchFn(callFrame -> {
-                var user = (User) callFrame.args[0];
+            new Hook(param -> {
+                var user = (User) param.args[0];
                 var username = user.getUsername();
-                var res = (String) callFrame.getResult();
+                var res = (String) param.getResult();
                 if (res.equals(username)) return;
 
-                callFrame.setResult(getFormatted(username, res, user));
+                param.setResult(getFormatted(username, res, user));
             }
         ));
     }

@@ -10,14 +10,14 @@ import android.content.Context
 import com.aliucord.Main
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.PinePrePatchFn
+import com.aliucord.patcher.InsteadHook
+import com.aliucord.patcher.PreHook
 import com.discord.models.member.GuildMember
 import com.discord.models.user.CoreUser
 import com.discord.models.user.User
 import com.discord.stores.StoreMessageReplies
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage
 import com.discord.widgets.chat.list.entries.MessageEntry
-import top.canyie.pine.callback.MethodReplacement
 
 @AliucordPlugin
 @Suppress("unused")
@@ -34,12 +34,12 @@ class ShowReplyMention : Plugin() {
         val replyHolder = c.getDeclaredField("replyHolder").apply { isAccessible = true }
         val replyLinkItem = c.getDeclaredField("replyLinkItem").apply { isAccessible = true }
 
-        patcher.patch(c, "configureReplyPreview", arrayOf(MessageEntry::class.java), PinePrePatchFn {
+        patcher.patch(c, "configureReplyPreview", arrayOf(MessageEntry::class.java), PreHook {
             try {
-                if (replyHolder[it.thisObject] == null || replyLinkItem[it.thisObject] == null) return@PinePrePatchFn
+                if (replyHolder[it.thisObject] == null || replyLinkItem[it.thisObject] == null) return@PreHook
                 val messageEntry = it.args[0] as MessageEntry
                 val replyData = messageEntry.replyData
-                if (replyData == null || replyData.messageState !is StoreMessageReplies.MessageState.Loaded) return@PinePrePatchFn
+                if (replyData == null || replyData.messageState !is StoreMessageReplies.MessageState.Loaded) return@PreHook
                 val refEntry = replyData.messageEntry
                 val refAuthor = CoreUser(refEntry.message.author)
                 val refAuthorMember = refEntry.author
@@ -60,7 +60,7 @@ class ShowReplyMention : Plugin() {
             c,
             "configureReplyAuthor",
             arrayOf(User::class.java, GuildMember::class.java, MessageEntry::class.java),
-            MethodReplacement.DO_NOTHING
+            InsteadHook.DO_NOTHING
         )
     }
 

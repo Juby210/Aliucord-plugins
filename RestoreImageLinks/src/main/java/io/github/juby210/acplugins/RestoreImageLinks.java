@@ -11,18 +11,17 @@ import android.content.Context;
 
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.InsteadHook;
 import com.discord.utilities.textprocessing.MessagePreprocessor;
 
 import java.util.Collection;
 
-import top.canyie.pine.callback.MethodReplacement;
-
 @AliucordPlugin
 @SuppressWarnings("unused")
-public class RestoreImageLinks extends Plugin {
+public final class RestoreImageLinks extends Plugin {
     @Override
     public void start(Context context) {
-        patcher.patch(MessagePreprocessor.class, "stripSimpleEmbedLink", new Class<?>[]{ Collection.class }, MethodReplacement.DO_NOTHING);
+        patcher.patch(MessagePreprocessor.class, "stripSimpleEmbedLink", new Class<?>[]{ Collection.class }, InsteadHook.DO_NOTHING);
     }
 
     @Override

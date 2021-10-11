@@ -14,7 +14,7 @@ import com.aliucord.Constants
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.PinePatchFn
+import com.aliucord.patcher.Hook
 import com.aliucord.utils.ReflectUtils
 import com.aliucord.utils.RxUtils
 import com.aliucord.utils.RxUtils.onBackpressureBuffer
@@ -86,7 +86,7 @@ class UserDetails : Plugin() {
             cacheData(guildId = msg.guildId ?: msg.channelId, id = CoreUser(msg.author).id, lastMessage = SnowflakeUtils.toTimestamp(msg.id))
         }))
 
-        patcher.patch(UserProfileHeaderView::class.java, "updateViewState", arrayOf(UserProfileHeaderViewModel.ViewState.Loaded::class.java), PinePatchFn {
+        patcher.patch(UserProfileHeaderView::class.java, "updateViewState", arrayOf(UserProfileHeaderViewModel.ViewState.Loaded::class.java), Hook {
             addDetails(it.thisObject as UserProfileHeaderView, (it.args[0] as UserProfileHeaderViewModel.ViewState.Loaded).user)
         })
     }

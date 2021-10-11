@@ -15,8 +15,8 @@ import com.aliucord.CollectionUtils;
 import com.aliucord.Logger;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.patcher.Hook;
+import com.aliucord.patcher.PreHook;
 import com.discord.models.message.Message;
 import com.discord.stores.*;
 import com.discord.utilities.textprocessing.*;
@@ -43,7 +43,7 @@ public final class MessageLogger extends Plugin {
     public void start(Context context) throws Throwable {
         new ReAdder(this, patcher);
 
-        patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new PinePatchFn(callFrame -> chatList = (WidgetChatList) callFrame.thisObject));
+        patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
 
         patchAddMessages();
         patchDeleteMessages();
@@ -66,16 +66,16 @@ public final class MessageLogger extends Plugin {
     private final Logger logger = new Logger("MessageLogger");
 
     private void patchAddMessages() {
-        patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new PinePatchFn(callFrame -> {
-            var messages = (List<Message>) callFrame.args[0];
+        patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
+            var messages = (List<Message>) param.args[0];
             for (var message : messages) updateCached(message.getId(), message);
         }));
     }
 
     private void patchDeleteMessages() {
-        patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PinePrePatchFn(callFrame -> {
-            var channelId = (long) callFrame.args[0];
-            var newDeleted = (List<Long>) callFrame.args[1];
+        patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
+            var channelId = (long) param.args[0];
+            var newDeleted = (List<Long>) param.args[1];
 
             var updateMessages = StoreStream.getChannelsSelected().getId() == channelId;
             for (var id : newDeleted) {
@@ -96,13 +96,13 @@ public final class MessageLogger extends Plugin {
                 }
             }
 
-            callFrame.setResult(null);
+            param.setResult(null);
         }));
     }
 
     private void patchUpdateMessages() {
-        patcher.patch(StoreMessagesHolder.class, "updateMessages", new Class<?>[]{ com.discord.api.message.Message.class }, new PinePrePatchFn(callFrame -> {
-            var msg = new Message((com.discord.api.message.Message) callFrame.args[0]);
+        patcher.patch(StoreMessagesHolder.class, "updateMessages", new Class<?>[]{ com.discord.api.message.Message.class }, new PreHook(param -> {
+            var msg = new Message((com.discord.api.message.Message) param.args[0]);
             var id = msg.getId();
             var edited = msg.getEditedTimestamp();
 
@@ -143,8 +143,8 @@ public final class MessageLogger extends Plugin {
         var mDraweeStringBuilder = SimpleDraweeSpanTextView.class.getDeclaredField("mDraweeStringBuilder");
         mDraweeStringBuilder.setAccessible(true);
 
-        patcher.patch(WidgetChatListAdapterItemMessage.class, "processMessageText", new Class<?>[]{ SimpleDraweeSpanTextView.class, MessageEntry.class }, new PinePatchFn(callFrame -> {
-            var messageEntry = (MessageEntry) callFrame.args[1];
+        patcher.patch(WidgetChatListAdapterItemMessage.class, "processMessageText", new Class<?>[]{ SimpleDraweeSpanTextView.class, MessageEntry.class }, new Hook(param -> {
+            var messageEntry = (MessageEntry) param.args[1];
             var message = messageEntry.getMessage();
             if (message == null) return;
             Long channelId = message.getChannelId();
@@ -157,7 +157,7 @@ public final class MessageLogger extends Plugin {
             if (record == null) return;
 
             try {
-                var textView = (SimpleDraweeSpanTextView) callFrame.args[0];
+                var textView = (SimpleDraweeSpanTextView) param.args[0];
                 var builder = (DraweeSpanStringBuilder) mDraweeStringBuilder.get(textView);
                 if (builder == null) return;
                 var context = textView.getContext();
@@ -178,12 +178,12 @@ public final class MessageLogger extends Plugin {
                 }
 
                 if (record.editHistory.size() > 0) {
-                    var data = ((WidgetChatListItem) callFrame.thisObject).adapter.getData();
+                    var data = ((WidgetChatListItem) param.thisObject).adapter.getData();
                     if (data != null) {
                         MessagePreprocessor messagePreprocessor = (MessagePreprocessor) getMessagePreprocessor.invoke(
-                            callFrame.thisObject, data.getUserId(), message, messageEntry.getMessageState());
+                            param.thisObject, data.getUserId(), message, messageEntry.getMessageState());
                         MessageRenderContext renderContext = (MessageRenderContext) getMessageRenderContext.invoke(
-                            callFrame.thisObject, context, messageEntry, getSpoilerClickHandler.invoke(callFrame.thisObject, message));
+                            param.thisObject, context, messageEntry, getSpoilerClickHandler.invoke(param.thisObject, message));
                         DiscordParser.ParserOptions options = message.isWebhook() ?
                             DiscordParser.ParserOptions.ALLOW_MASKED_LINKS : DiscordParser.ParserOptions.DEFAULT;
                         int added = 0;
