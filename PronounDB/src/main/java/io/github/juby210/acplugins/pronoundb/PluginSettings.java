@@ -40,7 +40,7 @@ public final class PluginSettings extends SettingsPage {
         var context = view.getContext();
         var layout = getLinearLayout();
 
-        var appearanceHeader = new TextView(context, null, 0, R.h.UiKit_Settings_Item_Header);
+        var appearanceHeader = new TextView(context, null, 0, R.i.UiKit_Settings_Item_Header);
         appearanceHeader.setTypeface(ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold));
         appearanceHeader.setText("Pronouns appearance");
         layout.addView(appearanceHeader);

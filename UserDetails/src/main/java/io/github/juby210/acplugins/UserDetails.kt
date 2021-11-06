@@ -116,7 +116,7 @@ class UserDetails : Plugin() {
         val customStatus = binding.a.findViewById<View>(customStatusViewId)
         val layout = customStatus.parent as LinearLayout
         val context = layout.context
-        val detailsView = layout.findViewById(viewId) ?: TextView(context, null, 0, R.h.UiKit_TextView_Semibold).apply {
+        val detailsView = layout.findViewById(viewId) ?: TextView(context, null, 0, R.i.UiKit_TextView_Semibold).apply {
             id = viewId
             typeface = ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold)
             setTextColor(ColorCompat.getThemedColor(context, R.b.colorTextMuted))

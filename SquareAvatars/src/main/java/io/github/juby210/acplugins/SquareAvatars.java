@@ -8,7 +8,6 @@ package io.github.juby210.acplugins;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.Constants;
 import com.aliucord.Logger;
 import com.aliucord.annotations.AliucordPlugin;
@@ -32,9 +31,11 @@ public final class SquareAvatars extends Plugin {
 
         // com.facebook.drawee.generic.GenericDraweeHierarchyInflater updateBuilder
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
-        for (Method m : AnimatableValueParser.class.getDeclaredMethods()) {
+        var attrSet = AttributeSet.class;
+        var ctxClass = Context.class;
+        for (Method m : c.c.a.a0.d.class.getDeclaredMethods()) {
             var params = m.getParameterTypes();
-            if (params.length == 3 && params[2] == AttributeSet.class && params[1] == Context.class) {
+            if (params.length == 3 && params[2] == attrSet && params[1] == ctxClass) {
                 logger.debug("Found obfuscated updateBuilder method: " + m.getName());
                 patcher.patch(m, new Hook(param -> {
                     var attrs = (AttributeSet) param.args[2];

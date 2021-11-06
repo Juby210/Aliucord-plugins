@@ -31,74 +31,67 @@ import java.util.*
 @Suppress("unused")
 @SuppressLint("SimpleDateFormat")
 class CustomTimestamps : Plugin() {
-  init {
-    settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
-  }
+    init {
+        settingsTab = SettingsTab(PluginSettings::class.java).withArgs(settings)
+    }
 
-  class PluginSettings(val settings: SettingsAPI) : SettingsPage() {
-    override fun onViewBound(view: View) {
-      super.onViewBound(view)
+    class PluginSettings(val settings: SettingsAPI) : SettingsPage() {
+        override fun onViewBound(view: View) {
+            super.onViewBound(view)
 
-      setActionBarTitle("CustomTimestamps")
-      setPadding(0)
+            setActionBarTitle("CustomTimestamps")
+            setPadding(0)
 
-      val context = view.context
-      val format = settings.getString("format", defaultFormat)
+            val context = view.context
+            val format = settings.getString("format", defaultFormat)
 
-      val guide = TextView(context, null, 0, R.h.UiKit_Settings_Item_SubText).apply {
-        setPreview(format, this)
-        movementMethod = LinkMovementMethod.getInstance()
-      }
-      linearLayout.addView(TextInput(context).apply {
-        val padding = DimenUtils.getDefaultPadding()
-        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-          .apply { setMargins(padding, padding, padding, 0) }
-        hint = "Custom Timestamp Format"
-        editText.apply editText@ {
-          if (this == null) return@editText
-          maxLines = 1
-          setText(format)
-          addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable) = s.toString().let {
-              settings.setString("format", it)
-              setPreview(it, guide)
+            val guide = TextView(context, null, 0, R.i.UiKit_Settings_Item_SubText).apply {
+                setPreview(format, this)
+                movementMethod = LinkMovementMethod.getInstance()
             }
+            linearLayout.addView(TextInput(context, "Custom Timestamp Format", format, object : TextWatcher {
+                override fun afterTextChanged(s: Editable) = s.toString().let {
+                    settings.setString("format", it)
+                    setPreview(it, guide)
+                }
 
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-          })
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+            }).apply {
+                val padding = DimenUtils.defaultPadding
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { setMargins(padding, padding, padding, 0) }
+            })
+            linearLayout.addView(guide)
         }
-      })
-      linearLayout.addView(guide)
+
+        private fun setPreview(formatStr: String, view: TextView) {
+            view.text = SpannableStringBuilder("Formatting guide\n\nPreview: ").apply {
+                append(format(formatStr, System.currentTimeMillis()))
+                setSpan(URLSpan("https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"), 0, 16, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
     }
 
-    fun setPreview(formatStr: String, view: TextView) {
-      view.text = SpannableStringBuilder("Formatting guide\n\nPreview: ").apply {
-        append(format(formatStr, System.currentTimeMillis()))
-        setSpan(URLSpan("https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"), 0, 16, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-      }
+    override fun start(context: Context?) {
+        patcher.patch(
+            TimeUtils::class.java.getDeclaredMethod("toReadableTimeString", Context::class.java, Long::class.javaPrimitiveType, Clock::class.java),
+            Hook { it.result = format(settings.getString("format", defaultFormat), it.args[1] as Long) }
+        )
     }
-  }
 
-  override fun start(context: Context?) {
-    patcher.patch(
-      TimeUtils::class.java.getDeclaredMethod("toReadableTimeString", Context::class.java, Long::class.javaPrimitiveType, Clock::class.java),
-        Hook { it.result = format(settings.getString("format", defaultFormat), it.args[1] as Long) }
-    )
-  }
+    override fun stop(context: Context?) = patcher.unpatchAll()
 
-  override fun stop(context: Context?) = patcher.unpatchAll()
+    companion object {
+        const val defaultFormat = "dd.MM.yyyy, HH:mm:ss"
 
-  companion object {
-    const val defaultFormat = "dd.MM.yyyy, HH:mm:ss"
-
-    fun format(format: String?, time: Long): String {
-      return try {
-        SimpleDateFormat(format).format(Date(time))
-      } catch (e: Throwable) {
-        Main.logger.info("Invalid format for CustomTimestamps, using default format")
-        SimpleDateFormat(defaultFormat).format(Date(time))
-      }
+        fun format(format: String?, time: Long): String {
+            return try {
+                SimpleDateFormat(format).format(Date(time))
+            } catch (e: Throwable) {
+                Main.logger.info("Invalid format for CustomTimestamps, using default format")
+                SimpleDateFormat(defaultFormat).format(Date(time))
+            }
+        }
     }
-  }
 }

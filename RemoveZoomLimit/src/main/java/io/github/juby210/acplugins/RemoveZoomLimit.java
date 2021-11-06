@@ -15,7 +15,6 @@ import android.view.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
@@ -92,9 +91,12 @@ public final class RemoveZoomLimit extends Plugin {
         if (settings.getBool("removeMaxRes", false)) {
             // Remove max resolution limit in image loader
             // Gets method by param types because the method is in heavily obfuscated class
-            for (var m : AnimatableValueParser.class.getDeclaredMethods()) {
+            var f = c.f.j.d.f.class;
+            var e = c.f.j.d.e.class;
+            var i = int.class;
+            for (var m : c.c.a.a0.d.class.getDeclaredMethods()) {
                 var params = m.getParameterTypes();
-                if (params.length == 4 && params[0] == c.f.j.d.f.class && params[1] == c.f.j.d.e.class && params[3] == int.class) {
+                if (params.length == 4 && params[0] == f && params[1] == e && params[3] == i) {
                     Utils.log("[RemoveZoomLimit] Found obfuscated method to limit resolution: " + m.getName());
                     maxResUnpatch = patcher.patch(m, InsteadHook.returnConstant(1));
                     break;

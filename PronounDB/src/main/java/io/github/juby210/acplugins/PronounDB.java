@@ -38,7 +38,7 @@ import io.github.juby210.acplugins.pronoundb.*;
 @AliucordPlugin
 @SuppressLint("SetTextI18n")
 @SuppressWarnings("unused")
-public class PronounDB extends Plugin {
+public final class PronounDB extends Plugin {
     public PronounDB() {
         settingsTab = new SettingsTab(PluginSettings.class).withArgs(settings);
     }
@@ -68,7 +68,7 @@ public class PronounDB extends Plugin {
                 var header = (ConstraintLayout) itemTimestamp.getParent();
                 TextView pronounsView = header.findViewById(viewId);
                 if (pronounsView == null) {
-                    pronounsView = new TextView(header.getContext(), null, 0, R.h.UiKit_TextView);
+                    pronounsView = new TextView(header.getContext(), null, 0, R.i.UiKit_TextView);
                     pronounsView.setId(viewId);
                     pronounsView.setTextSize(12);
                     pronounsView.setTextColor(ColorCompat.getThemedColor(header.getContext(), R.b.colorTextMuted));
@@ -136,7 +136,7 @@ public class PronounDB extends Plugin {
 
         TextView pronounsView = layout.findViewById(viewId);
         if (pronounsView == null) {
-            pronounsView = new TextView(layout.getContext(), null, 0, R.h.UserProfile_Section_Header);
+            pronounsView = new TextView(layout.getContext(), null, 0, R.i.UserProfile_Section_Header);
             pronounsView.setId(viewId);
             pronounsView.setTypeface(ResourcesCompat.getFont(layout.getContext(), com.aliucord.Constants.Fonts.whitney_semibold));
             pronounsView.setPadding(DimenUtils.dpToPx(16), 0, 0, 0);

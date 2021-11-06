@@ -34,70 +34,70 @@ import com.lytefast.flexinput.R
 @Suppress("unused")
 @SuppressLint("SetTextI18n", "UseCompatLoadingForDrawables")
 class ViewRaw : Plugin() {
-  init {
-    needsResources = true
-  }
-
-  class Page(private val message: Message) : SettingsPage() {
-    override fun onViewBound(view: View) {
-      super.onViewBound(view)
-
-      setActionBarTitle("Raw message by " + CoreUser(message.author).username)
-      setActionBarSubtitle("View Raw")
-
-      val context = view.context
-      val layout = linearLayout
-
-      val content = message.content
-      if (!content.isNullOrEmpty()) {
-        layout.addView(TextView(context).apply {
-          text = MDUtils.renderCodeBlock(context, SpannableStringBuilder(), null, content)
-          setTextIsSelectable(true)
-        })
-        layout.addView(Divider(context))
-      }
-
-      layout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Header).apply {
-        text = "All Raw Data"
-        typeface = ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold)
-        setPadding(0, paddingTop, paddingRight, paddingBottom)
-      })
-      layout.addView(TextView(context).apply {
-        text = MDUtils.renderCodeBlock(context, SpannableStringBuilder(), "js", GsonUtils.toJsonPretty(message))
-        setTextIsSelectable(true)
-      })
+    init {
+        needsResources = true
     }
-  }
 
-  override fun start(ctx: Context) {
-    val icon = ResourcesCompat.getDrawable(
-      resources,
-      resources.getIdentifier("ic_viewraw", "drawable", "io.github.juby210.acplugins"), null
-    ) ?: ctx.resources.getDrawable(R.d.design_password_eye, null).mutate()
+    class Page(private val message: Message) : SettingsPage() {
+        override fun onViewBound(view: View) {
+            super.onViewBound(view)
 
-    val viewId = View.generateViewId()
-    val c = WidgetChatListActions::class.java
-    val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
+            setActionBarTitle("Raw message by " + CoreUser(message.author).username)
+            setActionBarSubtitle("View Raw")
 
-    patcher.patch(c.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), Hook {
-        val binding = getBinding.invoke(it.thisObject) as WidgetChatListActionsBinding
-        val viewRaw = binding.a.findViewById<TextView>(viewId)
-        viewRaw.setOnClickListener { e ->
-            Utils.openPageWithProxy(e.context, Page((it.args[0] as WidgetChatListActions.Model).message))
+            val context = view.context
+            val layout = linearLayout
+
+            val content = message.content
+            if (!content.isNullOrEmpty()) {
+                layout.addView(TextView(context).apply {
+                    text = MDUtils.renderCodeBlock(context, SpannableStringBuilder(), null, content)
+                    setTextIsSelectable(true)
+                })
+                layout.addView(Divider(context))
+            }
+
+            layout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Header).apply {
+                text = "All Raw Data"
+                typeface = ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold)
+                setPadding(0, paddingTop, paddingRight, paddingBottom)
+            })
+            layout.addView(TextView(context).apply {
+                text = MDUtils.renderCodeBlock(context, SpannableStringBuilder(), "js", GsonUtils.toJsonPretty(message))
+                setTextIsSelectable(true)
+            })
         }
-    })
+    }
 
-    patcher.patch(c, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
-        val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
-        val context = linearLayout.context
-        icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
-        linearLayout.addView(TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
-            id = viewId
-            text = "View Raw"
-            setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+    override fun start(ctx: Context) {
+        val icon = ResourcesCompat.getDrawable(
+            resources,
+            resources.getIdentifier("ic_viewraw", "drawable", "io.github.juby210.acplugins"), null
+        ) ?: ctx.resources.getDrawable(R.e.design_password_eye, null).mutate()
+
+        val viewId = View.generateViewId()
+        val c = WidgetChatListActions::class.java
+        val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
+
+        patcher.patch(c.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), Hook {
+            val binding = getBinding.invoke(it.thisObject) as WidgetChatListActionsBinding
+            val viewRaw = binding.a.findViewById<TextView>(viewId)
+            viewRaw.setOnClickListener { e ->
+                Utils.openPageWithProxy(e.context, Page((it.args[0] as WidgetChatListActions.Model).message))
+            }
         })
-    })
-  }
 
-  override fun stop(context: Context?) = patcher.unpatchAll()
+        patcher.patch(c, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
+            val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
+            val context = linearLayout.context
+            icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
+            linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
+                id = viewId
+                text = "View Raw"
+                setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+            })
+        })
+    }
+
+    override fun stop(context: Context?) = patcher.unpatchAll()
 }
