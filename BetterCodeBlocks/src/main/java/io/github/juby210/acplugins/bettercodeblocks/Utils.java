@@ -12,6 +12,9 @@ import android.text.style.ForegroundColorSpan;
 
 import com.discord.utilities.color.ColorCompat;
 
+import java.lang.reflect.Method;
+import java.util.List;
+
 public final class Utils {
     public static void ensureEndsWithNewline(SpannableStringBuilder builder) {
         if (builder.length() > 0) {
@@ -29,5 +32,10 @@ public final class Utils {
             builder.length(),
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
+    }
+
+    public static Method getCreateGenericCodeRules() throws Throwable {
+        var stringArray = String[].class;
+        return c.a.t.a.e.class.getDeclaredMethod("a", c.a.t.a.f.class, List.class, stringArray, stringArray, stringArray);
     }
 }

@@ -8,6 +8,7 @@ package io.github.juby210.acplugins;
 import android.content.Context;
 import android.text.SpannableStringBuilder;
 
+import com.aliucord.Main;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PreHook;
@@ -19,8 +20,6 @@ import com.discord.simpleast.core.parser.Parser;
 import com.discord.utilities.textprocessing.node.BasicRenderContext;
 import com.discord.utilities.textprocessing.node.BlockBackgroundNode;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Matcher;
 
 import io.github.juby210.acplugins.bettercodeblocks.*;
@@ -31,18 +30,30 @@ import io.noties.prism4j.Prism4j;
 @AliucordPlugin
 @SuppressWarnings({ "unchecked", "unused" })
 public final class BetterCodeBlocks extends Plugin {
+    public static final GrammarLocatorImpl grammarLocator = new GrammarLocatorImpl();
+    public static final Prism4j prism4j = new Prism4j(grammarLocator);
+
+    public BetterCodeBlocks() {
+        settingsTab = new SettingsTab(Settings.class).withArgs(settings);
+    }
+
     @Override
     public void start(Context context) throws Throwable {
-        highlight = Prism4jSyntaxHighlight.create(new Prism4j(new GrammarLocatorImpl()), new Prism4jThemeDarkula());
+        highlight = Prism4jSyntaxHighlight.create(prism4j, new Prism4jThemeDarkula());
 
         patcher.patch(c.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PreHook(param -> {
+            var langMap = ((c.a.t.a.a) param.thisObject).a;
+            if (!langMap.containsKey("go")) try {
+                SimpleASTUtils.addLanguages(langMap);
+            } catch (Throwable e) {
+                Main.logger.error("Failed to add languages", e);
+            }
+
             var matcher = (Matcher) param.args[0];
             if (matcher == null) return;
             var lang = (String) matcher.group(1);
-            if (lang != null && blacklist.contains(lang)) return;
-            param.setResult(new ParseSpec<>(
-                renderCodeBlock(lang, matcher.group(3)), param.args[2]
-            ));
+            if (Settings.Companion.get(settings, lang))
+                param.setResult(new ParseSpec<>(renderCodeBlock(lang, matcher.group(3)), param.args[2]));
         }));
 
         patcher.patch(BlockBackgroundNode.class.getDeclaredConstructor(boolean.class, Node[].class), new PreHook(param -> {
@@ -56,7 +67,7 @@ public final class BetterCodeBlocks extends Plugin {
         patcher.patch(MDUtils.class.getDeclaredMethod("renderCodeBlock", Context.class, SpannableStringBuilder.class, String.class, String.class),
             new PreHook(param -> {
                 var lang = (String) param.args[2];
-                if (lang != null && blacklist.contains(lang)) return;
+                if (!Settings.Companion.get(settings, lang)) return;
 
                 var builder = (SpannableStringBuilder) param.args[1];
                 int a = builder.length();
@@ -74,7 +85,6 @@ public final class BetterCodeBlocks extends Plugin {
         patcher.unpatchAll();
     }
 
-    public final List<String> blacklist = Arrays.asList("protobuf", "proto", "pb", "rs", "rust", "cql", "cr", "crystal");
     private Prism4jSyntaxHighlight highlight;
 
     public CharSequence render(String lang, String content) {

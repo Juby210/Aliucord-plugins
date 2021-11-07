@@ -5,4 +5,9 @@
 
 package c.a.t.a;
 
-public final class a {}
+import java.util.Map;
+
+public final class a {
+    /** languageMap */
+    public Map<String, Object> a;
+}
