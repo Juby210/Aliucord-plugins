@@ -41,6 +41,7 @@ import io.github.juby210.acplugins.userdetails.CachedData
 import io.github.juby210.acplugins.userdetails.PluginSettings
 import rx.Subscription
 import java.lang.reflect.Field
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 val cache = HashMap<Long, HashMap<Long, CachedData>>()
@@ -124,9 +125,8 @@ class UserDetails : Plugin() {
         }
 
         val uId = user.id
-        val clock = ClockFactory.get()
         val text = StringBuilder()
-        if (displayCreatedAt) text.append("Created at: ").append(TimeUtils.toReadableTimeString(context, SnowflakeUtils.toTimestamp(uId), clock))
+        if (displayCreatedAt) text.append("Created at: ").append(toReadable(context, SnowflakeUtils.toTimestamp(uId)))
         if (settingsHeader) {
             detailsView.text = text
             return
@@ -136,7 +136,7 @@ class UserDetails : Plugin() {
         val dm = gId == 0L
         if (settings.getBool("joinedAt", true) && !dm) cache[gId]?.get(uId)?.joinedAt?.let {
             if (text.isNotEmpty()) text.append("\n")
-            text.append("Joined at: ").append(if (it == -1L) "-" else TimeUtils.toReadableTimeString(context, it, clock))
+            text.append("Joined at: ").append(if (it == -1L) "-" else toReadable(context, it))
         } ?: if (lastRequestedMember != uId) {
             lastRequestedMember = uId
             forceUpdate = Runnable { addDetails(view, user) }
@@ -152,7 +152,7 @@ class UserDetails : Plugin() {
             else {
                 val cIdOrGId = if (dm) cId else gId
                 cache[cIdOrGId]?.get(uId)?.lastMessage?.let {
-                    appendLastMessage(text, if (it == -1L) "-" else TimeUtils.toReadableTimeString(context, it, clock))
+                    appendLastMessage(text, if (it == -1L) "-" else toReadable(context, it))
                 } ?: if (lastRequestedSearch != uId) {
                     lastRequestedSearch = uId
                     forceUpdate = Runnable { addDetails(view, user) }
@@ -190,5 +190,19 @@ class UserDetails : Plugin() {
                 Utils.mainThread.post(forceUpdate!!)
             }
         })))?.unsubscribe()
+    }
+
+    private fun toReadable(context: Context, timestamp: Long): String {
+        val clock = ClockFactory.get()
+        var readable = TimeUtils.toReadableTimeString(context, timestamp, ClockFactory.get()).toString()
+        if (settings.getBool("showDaysAgo", true)) {
+            val days = TimeUnit.DAYS.convert(clock.currentTimeMillis() - timestamp, TimeUnit.MILLISECONDS)
+            readable += when (days) {
+                0L -> " (Today)"
+                1L -> " (Yesterday)"
+                else -> " ($days days ago)"
+            }
+        }
+        return readable
     }
 }
