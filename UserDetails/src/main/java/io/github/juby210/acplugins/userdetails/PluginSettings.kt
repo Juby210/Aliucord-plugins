@@ -27,6 +27,7 @@ class PluginSettings(private val settings: SettingsAPI) : AppBottomSheet() {
         layout.addView(createSwitch(context, "createdAt", "Display \"Created at\""))
         layout.addView(createSwitch(context, "joinedAt", "Display \"Joined at\""))
         layout.addView(createSwitch(context, "lastMessage", "Display \"Last message\""))
+        layout.addView(createSwitch(context, "showDaysAgo", "Also include \"Days ago\" for all dates"))
         return layout
     }
 
