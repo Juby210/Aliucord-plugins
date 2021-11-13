@@ -10,8 +10,11 @@ import android.content.Context
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.NestedScrollView
 import com.aliucord.Constants
@@ -20,8 +23,10 @@ import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.aliucord.fragments.SettingsPage
 import com.aliucord.patcher.Hook
+import com.aliucord.utils.DimenUtils.dp
 import com.aliucord.utils.GsonUtils
 import com.aliucord.utils.MDUtils
+import com.aliucord.views.Button
 import com.aliucord.views.Divider
 import com.discord.databinding.WidgetChatListActionsBinding
 import com.discord.models.message.Message
@@ -49,6 +54,42 @@ class ViewRaw : Plugin() {
             val layout = linearLayout
 
             val content = message.content
+
+            val icon = ContextCompat.getDrawable(context, R.e.ic_copy_24dp)?.apply {
+                mutate()
+                setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
+            }
+            layout.addView(LinearLayout(context).apply {
+                setPadding(0, 0, 0, 12.dp)
+                addView(Button(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+                        weight = 1f
+                        marginEnd = 3.dp
+                    }
+                    text = "Content"
+                    contentDescription = "Copy Content"
+                    isEnabled = !content.isNullOrEmpty()
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+                    setOnClickListener {
+                        Utils.setClipboard("Copy Content", content)
+                        Utils.showToast("Copied content to clipboard!")
+                    }
+                })
+                addView(Button(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+                        weight = 1f
+                        marginStart = 3.dp
+                    }
+                    text = "Raw Data"
+                    contentDescription = "Copy Raw Data"
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+                    setOnClickListener {
+                        Utils.setClipboard("Copy Data", GsonUtils.toJsonPretty(message))
+                        Utils.showToast("Copied data to clipboard!")
+                    }
+                })
+            })
+
             if (!content.isNullOrEmpty()) {
                 layout.addView(TextView(context).apply {
                     text = MDUtils.renderCodeBlock(context, SpannableStringBuilder(), null, content)
@@ -75,24 +116,44 @@ class ViewRaw : Plugin() {
             resources.getIdentifier("ic_viewraw", "drawable", "io.github.juby210.acplugins"), null
         ) ?: ctx.resources.getDrawable(R.e.design_password_eye, null).mutate()
 
-        val viewId = View.generateViewId()
+        val copyRawId = View.generateViewId()
+        val viewRawId = View.generateViewId()
+
         val c = WidgetChatListActions::class.java
         val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
 
         patcher.patch(c.getDeclaredMethod("configureUI", WidgetChatListActions.Model::class.java), Hook {
             val binding = getBinding.invoke(it.thisObject) as WidgetChatListActionsBinding
-            val viewRaw = binding.a.findViewById<TextView>(viewId)
+            val copyRaw = binding.root.findViewById<TextView>(copyRawId)
+            copyRaw.setOnClickListener { _ ->
+                Utils.setClipboard("Copy Raw", (it.args[0] as WidgetChatListActions.Model).message.content)
+                Utils.showToast("Copied content to clipboard!")
+                (it.thisObject as WidgetChatListActions).dismiss()
+            }
+            val viewRaw = binding.root.findViewById<TextView>(viewRawId)
             viewRaw.setOnClickListener { e ->
                 Utils.openPageWithProxy(e.context, Page((it.args[0] as WidgetChatListActions.Model).message))
+                (it.thisObject as WidgetChatListActions).dismiss()
             }
         })
 
         patcher.patch(c, "onViewCreated", arrayOf(View::class.java, Bundle::class.java), Hook {
             val linearLayout = (it.args[0] as NestedScrollView).getChildAt(0) as LinearLayout
             val context = linearLayout.context
+
+            linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
+                id = copyRawId
+                text = "Copy Raw"
+                context.getDrawable(R.e.ic_copy_24dp)?.run {
+                    mutate()
+                    setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(this, null, null, null)
+                }
+            })
+
             icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
             linearLayout.addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
-                id = viewId
+                id = viewRawId
                 text = "View Raw"
                 setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
             })
