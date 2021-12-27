@@ -43,6 +43,9 @@ Disables reply mention by default.
 ### [NoCopyEmbeds](https://github.com/Juby210/Aliucord-plugins/raw/builds/NoCopyEmbeds.zip)
 Disables copying text from embeds.
 
+### [OwoifyEverything](https://github.com/Juby210/Aliucord-plugins/raw/builds/OwoifyEverything.zip)
+*Makes your Discord owo*.
+
 ### [PronounDB](https://github.com/Juby210/Aliucord-plugins/raw/builds/PronounDB.zip)
 PronounDB plugin for Aliucord - Shows other's people pronouns in chat, so your chances of mis-gendering them is low. Service by pronoundb.org.
 
