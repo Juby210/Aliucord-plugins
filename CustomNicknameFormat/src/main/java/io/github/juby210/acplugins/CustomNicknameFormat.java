@@ -23,17 +23,18 @@ import com.discord.api.channel.Channel;
 import com.discord.app.AppBottomSheet;
 import com.discord.models.member.GuildMember;
 import com.discord.models.user.User;
+import com.discord.stores.StoreStream;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.user.UserUtils;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed$Companion$getModel$1;
 import com.lytefast.flexinput.R;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @AliucordPlugin
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unchecked", "unused" })
 public final class CustomNicknameFormat extends Plugin {
     public CustomNicknameFormat() {
         settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings);
@@ -43,6 +44,7 @@ public final class CustomNicknameFormat extends Plugin {
         public int getContentViewResId() { return 0; }
 
         private final SettingsAPI settings;
+
         public PluginSettings(SettingsAPI settings) {
             this.settings = settings;
         }
@@ -56,10 +58,10 @@ public final class CustomNicknameFormat extends Plugin {
             layout.setBackgroundColor(ColorCompat.getThemedColor(context, R.b.colorBackgroundPrimary));
 
             var radios = Arrays.asList(
-                    Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Nickname (Username)", null),
-                    Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Nickname (Tag)", null),
-                    Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Username", null),
-                    Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Username (Nickname)", null)
+                Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Nickname (Username)", null),
+                Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Nickname (Tag)", null),
+                Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Username", null),
+                Utils.createCheckedSetting(context, CheckedSetting.ViewType.RADIO, "Username (Nickname)", null)
             );
 
             var radioManager = new RadioManager(radios);
@@ -81,11 +83,12 @@ public final class CustomNicknameFormat extends Plugin {
         }
     }
 
-    public enum Format { NICKNAME_USERNAME, NICKNAME_TAG, USERNAME, USERNAME_NICKNAME }
+    public enum Format {NICKNAME_USERNAME, NICKNAME_TAG, USERNAME, USERNAME_NICKNAME}
 
     @Override
-    public void start(Context context) {
-        patcher.patch(GuildMember.Companion.getClass(), "getNickOrUsername", new Class<?>[]{ User.class, GuildMember.class, Channel.class, List.class },
+    public void start(Context context) throws Throwable {
+        patcher.patch(
+            GuildMember.Companion.getClass().getDeclaredMethod("getNickOrUsername", User.class, GuildMember.class, Channel.class, List.class),
             new Hook(param -> {
                 var user = (User) param.args[0];
                 var username = user.getUsername();
@@ -93,8 +96,23 @@ public final class CustomNicknameFormat extends Plugin {
                 if (res.equals(username)) return;
 
                 param.setResult(getFormatted(username, res, user));
-            }
-        ));
+            })
+        );
+
+        // fix custom format in embeds
+        patcher.patch(
+            WidgetChatListAdapterItemEmbed$Companion$getModel$1.class.getDeclaredMethod("call", Object.class, Object.class),
+            new Hook(param -> {
+                var map = (Map<Long, String>) param.getResult();
+                if (map.size() == 0) return;
+                var users = StoreStream.getUsers().getUsers();
+                for (var entry : map.entrySet()) {
+                    var id = entry.getKey();
+                    var user = users.get(id);
+                    if (user != null) entry.setValue(getFormatted(user.getUsername(), entry.getValue(), user));
+                }
+            })
+        );
     }
 
     @Override
