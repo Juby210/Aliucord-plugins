@@ -30,8 +30,6 @@ import com.discord.widgets.settings.WidgetSettings
 import com.discord.widgets.settings.developer.*
 import com.lytefast.flexinput.R
 import java.lang.reflect.Field
-import java.util.*
-import kotlin.collections.ArrayList
 
 inline val WidgetSettingsDeveloper.adapter: ExperimentOverridesAdapter
     get() = WidgetSettingsDeveloper.`access$getExperimentOverridesAdapter$p`(this)
@@ -71,7 +69,6 @@ class Experiments : Plugin() {
         settingsTab = SettingsTab(Settings::class.java, SettingsTab.Type.BOTTOM_SHEET).withArgs(this)
     }
 
-    val dataMap = WeakHashMap<WidgetSettingsDeveloper, MutableList<ExperimentOverridesAdapter.Item>>()
     private val editTextId = View.generateViewId()
 
     override fun start(context: Context?) {
@@ -92,31 +89,31 @@ class Experiments : Plugin() {
                 val ctx = getContext()
                 addView(TextInput(ctx, ctx.getString(R.h.search)).apply {
                     layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                        (DimenUtils.defaultPadding / 2).let { p -> setMargins(p, p, p, p) }
+                        (DimenUtils.defaultPadding / 2).let { p -> setMargins(p, 0, p, p) }
                     }
                     editText.apply {
                         maxLines = 1
                         id = editTextId
                     }
                 }, 3)
+                removeViewAt(2) // remove useless note "Not seeing your experiment?"
             }
         })
 
         patcher.after<`WidgetSettingsDeveloper$setupExperimentSection$2`>("invoke", List::class.java) {
-            `this$0`.apply {
-                val a = adapter
-                dataMap[this] = ArrayList(a.items)
+            val data = it.args[0] as List<ExperimentOverridesAdapter.Item>
+            `this$0`.run {
                 view!!.findViewById<EditText>(editTextId).addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
                     override fun afterTextChanged(s: Editable?) {
-                        if (dataMap.containsKey(this@apply)) {
-                            val old = a.items
-                            val new = if (s == null || s.equals("")) dataMap[this@apply]!!
+                        adapter.run {
+                            val old = items
+                            val new = if (s == null || s.equals("")) data
                             else {
-                                val search = s.toString().lowercase().trim()
-                                dataMap[this@apply]!!.filter { i -> i.apiName.contains(search) || i.name.contains(search) }
+                                val search = s.toString().trim()
+                                data.filter { i -> i.apiName.contains(search, true) || i.name.contains(search, true) }
                             }
                             val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                                 override fun getOldListSize() = old.size
@@ -126,8 +123,8 @@ class Experiments : Plugin() {
                                 override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
                                     old[oldItemPosition].apiName == new[newItemPosition].apiName
                             })
-                            a.items = new
-                            diff.dispatchUpdatesTo(a)
+                            items = new
+                            diff.dispatchUpdatesTo(this)
                         }
                     }
                 })
