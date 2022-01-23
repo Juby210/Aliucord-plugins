@@ -1,9 +1,9 @@
-version = "0.0.13"
+version = "0.1.0"
 description = "Display square avatars instead of circles."
 
 aliucord.changelog.set("""
-    Updated {updated marginTop}
+    Added {added marginTop}
     ======================
-    
-    * updated to **101.3**
+
+    * added option to change round radius
 """.trimIndent())
