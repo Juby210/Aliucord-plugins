@@ -25,7 +25,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import c.f.g.f.a;
+import b.f.g.f.a;
 
 @AliucordPlugin(requiresRestart = true)
 @SuppressWarnings("unused")
@@ -85,7 +85,7 @@ public final class SquareAvatars extends Plugin {
         // https://github.com/facebook/fresco/blob/master/drawee/src/main/java/com/facebook/drawee/generic/GenericDraweeHierarchyInflater.java#L98
         var attrSet = AttributeSet.class;
         var ctxClass = Context.class;
-        for (Method m : c.c.a.a0.d.class.getDeclaredMethods()) {
+        for (Method m : b.c.a.a0.d.class.getDeclaredMethods()) {
             var params = m.getParameterTypes();
             if (params.length == 3 && params[2] == attrSet && params[1] == ctxClass) {
                 logger.debug("Found obfuscated updateBuilder method: " + m.getName());

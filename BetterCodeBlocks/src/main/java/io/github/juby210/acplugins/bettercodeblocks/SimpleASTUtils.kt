@@ -11,19 +11,19 @@ import com.discord.utilities.textprocessing.*
 import java.util.regex.Pattern
 
 object SimpleASTUtils {
-    private fun Pattern.toMatchGroupRule(stylesProvider: StyleNode.a<*>) = c.a.t.a.d(this, 0, stylesProvider, this)
+    private fun Pattern.toMatchGroupRule(stylesProvider: StyleNode.a<*>) = b.a.t.a.d(this, 0, stylesProvider, this)
 
     @JvmStatic
     fun addLanguages(langMap: MutableMap<String, Any?>) {
         val createGenericCodeRules = Utils.getCreateGenericCodeRules().apply { isAccessible = true }
-        val codeRulesUtils = c.a.t.a.e.f
+        val codeRulesUtils = b.a.t.a.e.f
 
         val commentStyleProvider = StyleNode.a<Any> { listOf(ForegroundColorSpan((0xFF808080).toInt())) }
         val literalStyleProvider = `Rules$createCodeBlockRule$codeStyleProviders$3`.INSTANCE
         val keywordStyleProvider = `Rules$createCodeBlockRule$codeStyleProviders$4`.INSTANCE
         val identifierStyleProvider = `Rules$createCodeBlockRule$codeStyleProviders$5`.INSTANCE
         val punctuationStyleProvider = StyleNode.a<Any> { listOf(ForegroundColorSpan((0XFF969696).toInt())) }
-        val codeStyleProviders = c.a.t.a.f(
+        val codeStyleProviders = b.a.t.a.f(
             `Rules$createCodeBlockRule$codeStyleProviders$1`.INSTANCE,
             commentStyleProvider,
             literalStyleProvider,

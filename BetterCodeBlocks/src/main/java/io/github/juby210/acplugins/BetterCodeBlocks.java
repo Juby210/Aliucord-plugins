@@ -41,8 +41,8 @@ public final class BetterCodeBlocks extends Plugin {
     public void start(Context context) throws Throwable {
         highlight = Prism4jSyntaxHighlight.create(prism4j, new Prism4jThemeDarkula());
 
-        patcher.patch(c.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PreHook(param -> {
-            var langMap = ((c.a.t.a.a) param.thisObject).a;
+        patcher.patch(b.a.t.a.a.class, "parse", new Class<?>[]{ Matcher.class, Parser.class, Object.class }, new PreHook(param -> {
+            var langMap = ((b.a.t.a.a) param.thisObject).a;
             if (!langMap.containsKey("go")) try {
                 SimpleASTUtils.addLanguages(langMap);
             } catch (Throwable e) {

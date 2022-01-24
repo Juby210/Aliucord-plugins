@@ -36,6 +36,6 @@ public final class Utils {
 
     public static Method getCreateGenericCodeRules() throws Throwable {
         var stringArray = String[].class;
-        return c.a.t.a.e.class.getDeclaredMethod("a", c.a.t.a.f.class, List.class, stringArray, stringArray, stringArray);
+        return b.a.t.a.e.class.getDeclaredMethod("a", b.a.t.a.f.class, List.class, stringArray, stringArray, stringArray);
     }
 }

@@ -75,7 +75,7 @@ public final class RemoveZoomLimit extends Plugin {
 
         // com.facebook.samples.zoomable.DefaultZoomableController limitScale
         // https://github.com/facebook/fresco/blob/master/samples/zoomable/src/main/java/com/facebook/samples/zoomable/DefaultZoomableController.java#L474-L495
-        patcher.patch(c.f.l.b.c.class.getDeclaredMethod("f", Matrix.class, float.class, float.class, int.class), InsteadHook.returnConstant(false));
+        patcher.patch(b.f.l.b.c.class.getDeclaredMethod("f", Matrix.class, float.class, float.class, int.class), InsteadHook.returnConstant(false));
 
         removeMaxRes();
     }
@@ -91,13 +91,13 @@ public final class RemoveZoomLimit extends Plugin {
         if (settings.getBool("removeMaxRes", false)) {
             // Remove max resolution limit in image loader
             // Gets method by param types because the method is in heavily obfuscated class
-            var f = c.f.j.d.f.class;
-            var e = c.f.j.d.e.class;
+            var f = b.f.j.d.f.class;
+            var e = b.f.j.d.e.class;
             var i = int.class;
-            for (var m : c.c.a.a0.d.class.getDeclaredMethods()) {
+            for (var m : b.c.a.a0.d.class.getDeclaredMethods()) {
                 var params = m.getParameterTypes();
                 if (params.length == 4 && params[0] == f && params[1] == e && params[3] == i) {
-                    Utils.log("[RemoveZoomLimit] Found obfuscated method to limit resolution: " + m.getName());
+                    logger.debug("Found obfuscated method to limit resolution: " + m.getName());
                     maxResUnpatch = patcher.patch(m, InsteadHook.returnConstant(1));
                     break;
                 }
