@@ -34,8 +34,17 @@ public final class Utils {
         );
     }
 
+    // https://github.com/discord/SimpleAST/blob/d8987f0fede109936c429f5001817f58b827ba0f/simpleast-core/src/main/java/com/discord/simpleast/code/CodeRules.kt#L252
     public static Method getCreateGenericCodeRules() throws Throwable {
         var stringArray = String[].class;
-        return b.a.t.a.e.class.getDeclaredMethod("a", b.a.t.a.f.class, List.class, stringArray, stringArray, stringArray);
+        return b.a.t.a.e.class.getDeclaredMethod(
+            "a",
+            b.a.t.a.f.class, // codeStyleProviders
+            List.class, // additionalRules
+            stringArray, // definitions
+            stringArray, // builtIns
+            stringArray, // keywords
+            stringArray // types
+        );
     }
 }

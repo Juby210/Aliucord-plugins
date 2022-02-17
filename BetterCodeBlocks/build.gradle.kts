@@ -1,7 +1,12 @@
-version = "1.1.1"
+version = "1.1.2"
 description = "Makes codeblocks better by adding new languages, improving already existing and more."
 
 aliucord.changelog.set("""
+    1.1.2
+    ======================
+
+    * updated to **115.4**
+
     1.1.1
     ======================
 

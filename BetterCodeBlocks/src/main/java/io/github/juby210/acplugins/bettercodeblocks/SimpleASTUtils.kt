@@ -58,6 +58,7 @@ object SimpleASTUtils {
                 "break|case|chan|continue|default|defer|else|fallthrough|for|go(?:to)?|if|import|interface|map|range|return|select|switch|struct",
                 "type|var|const",
             ),
+            arrayOf(" ")
         )
 
         langMap["js"].apply {
