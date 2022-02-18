@@ -5,10 +5,15 @@
 
 package io.github.juby210.acplugins.bsi
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.*
+import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
+import com.aliucord.Constants
 import com.aliucord.Utils
+import com.aliucord.views.Divider
 import com.aliucord.widgets.LinearLayout
 import com.discord.app.AppBottomSheet
 import com.discord.utilities.color.ColorCompat
@@ -22,6 +27,7 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : AppBottomShee
     private var avatarStatus: CheckedSetting? = null
     private var filledColors: CheckedSetting? = null
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View {
         val context = inflater.context
 
@@ -39,7 +45,7 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : AppBottomShee
                     plugin.settings.setBool("filledColors", false)
                     filledColors?.isChecked = false
                 }
-                plugin.patchStatusView()
+                plugin.patchStatusView(resources)
             }.also { avatarStatus = it })
             addView(createSwitch(
                 context,
@@ -51,7 +57,7 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : AppBottomShee
                     plugin.settings.setBool("avatarStatus", false)
                     avatarStatus?.isChecked = false
                 }
-                plugin.patchStatusView()
+                plugin.patchStatusView(resources)
             }.also { filledColors = it })
             addView(createSwitch(
                 context,
@@ -82,6 +88,35 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : AppBottomShee
                 plugin.patchRadialStatus(it, isPluginEnabled("SquareAvatars"))
                 Utils.promptRestart()
             })
+
+            addView(Divider(context))
+            addView(TextView(context, null, 0, R.i.UiKit_Settings_Item_Header).apply {
+                typeface = ResourcesCompat.getFont(context, Constants.Fonts.whitney_semibold)
+                text = "Colors"
+            })
+            plugin.settings.run {
+                addView(ColorView(
+                    context,
+                    this,
+                    "colorOnline",
+                    "Online Color",
+                    resources.getColor(R.c.status_green_600, null) - 1
+                ))
+                addView(ColorView(
+                    context,
+                    this,
+                    "colorIdle",
+                    "Idle Color",
+                    resources.getColor(R.c.status_yellow, null) - 1
+                ))
+                addView(ColorView(
+                    context,
+                    this,
+                    "colorDND",
+                    "DND Color",
+                    resources.getColor(R.c.status_red, null) - 1
+                ))
+            }
         }
     }
 

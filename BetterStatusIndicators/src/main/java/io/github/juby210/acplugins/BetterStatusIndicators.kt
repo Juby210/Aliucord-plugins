@@ -79,7 +79,7 @@ class BetterStatusIndicators : Plugin() {
 
         val square = isPluginEnabled("SquareAvatars")
 
-        patchStatusView()
+        patchStatusView(res)
         patchMembersList(square)
 
         // User profile
@@ -103,10 +103,19 @@ class BetterStatusIndicators : Plugin() {
     override fun stop(context: Context?) = patcher.unpatchAll()
 
     private fun Resources.getStatusDrawables(drawable: Drawable) = arrayOf(
-        drawable.clone().apply { setTint(getColor(R.c.status_green, null) - 1) },
-        drawable.clone().apply { setTint(getColor(R.c.status_yellow, null) - 1) },
-        drawable.clone().apply { setTint(getColor(R.c.status_red, null) - 1) }
+        drawable.clone().apply {
+            setStatusTint("colorOnline", this@getStatusDrawables, R.c.status_green_600)
+        },
+        drawable.clone().apply {
+            setStatusTint("colorIdle", this@getStatusDrawables, R.c.status_yellow)
+        },
+        drawable.clone().apply {
+            setStatusTint("colorDND", this@getStatusDrawables, R.c.status_red)
+        }
     )
+
+    private fun Drawable.setStatusTint(key: String, res: Resources, default: Int) =
+        setTint(settings.getInt(key, res.getColor(default, null) - 1))
 
     private fun ClientStatus.getDrawable(drawables: Array<Drawable>) = when (this) {
         ClientStatus.ONLINE -> drawables[0]
@@ -141,10 +150,10 @@ class BetterStatusIndicators : Plugin() {
     }
 
     private var unpatchStatusView: Runnable? = null
-    fun patchStatusView() {
+    fun patchStatusView(res: Resources) {
         unpatchStatusView?.run()
 
-        val m by lazy { StatusView::class.java.getDeclaredMethod("setPresence", Presence::class.java) }
+        val m = StatusView::class.java.getDeclaredMethod("setPresence", Presence::class.java)
         if (settings.getBool("avatarStatus", true))
             unpatchStatusView = patcher.patch(m, Hook {
                 val presence = it.args[0] as Presence? ?: return@Hook
@@ -153,7 +162,7 @@ class BetterStatusIndicators : Plugin() {
                 val statusView = it.thisObject as StatusView
 
                 clientStatuses.mobile?.let { mobileStatus ->
-                    if (PresenceUtils.INSTANCE.isMobile(clientStatuses)) return@Hook
+                    if (PresenceUtils.INSTANCE.isMobile(clientStatuses) && !settings.exists("colorOnline")) return@Hook
                     mobileStatus.getDrawable(mobile)?.apply {
                         statusView.setImageDrawable(this)
                         return@Hook
@@ -174,8 +183,31 @@ class BetterStatusIndicators : Plugin() {
         else if (settings.getBool("filledColors", false))
             unpatchStatusView = patcher.patch(m, Hook {
                 val presence = it.args[0] as Presence? ?: return@Hook
-                presence.status?.getDrawable(filled)?.apply { (it.thisObject as StatusView).setImageDrawable(this) }
+                presence.status?.getDrawable(filled)?.apply { (it.thisObject as StatusView).setImageDrawable(clone()) }
             })
+        else if (settings.exists("colorOnline") || settings.exists("colorIdle") || settings.exists("colorDND")) {
+            val drawables = arrayOf(
+                res.getDrawable(R.e.ic_status_online_16dp, null).clone().apply {
+                    setStatusTint("colorOnline", res, R.c.status_green_600)
+                },
+                res.getDrawable(R.e.ic_status_idle_16dp, null).clone().apply {
+                    setStatusTint("colorIdle", res, R.c.status_yellow)
+                },
+                res.getDrawable(R.e.ic_status_dnd_16dp, null).clone().apply {
+                    setStatusTint("colorDND", res, R.c.status_red)
+                }
+            )
+            val mobileIcon = res.getDrawable(R.e.ic_mobile, null).clone().apply {
+                setStatusTint("colorOnline", res, R.c.status_green_600)
+            }
+            unpatchStatusView = patcher.patch(m, Hook {
+                val presence = it.args[0] as Presence? ?: return@Hook
+                val drawable =
+                    presence.clientStatuses?.let { clientStatuses -> if (PresenceUtils.INSTANCE.isMobile(clientStatuses)) mobileIcon else null }
+                        ?: presence.status?.getDrawable(drawables)
+                if (drawable != null) (it.thisObject as StatusView).setImageDrawable(drawable.clone())
+            })
+        }
     }
 
     private fun patchMembersList(square: Boolean) {
@@ -185,16 +217,16 @@ class BetterStatusIndicators : Plugin() {
         patcher.patch(
             memberViewHolder.getDeclaredMethod("bind", ChannelMembersListAdapter.Item.Member::class.java, Function0::class.java),
             Hook {
-                val presence = (it.args[0] as ChannelMembersListAdapter.Item.Member).presence ?: return@Hook
+                val presence = (it.args[0] as ChannelMembersListAdapter.Item.Member).presence
                 val binding = memberViewHolderBinding[it.thisObject] as WidgetChannelMembersListItemUserBinding
 
-                presence.clientStatuses?.let { clientStatuses ->
+                presence?.clientStatuses?.let { clientStatuses ->
                     val usernameText = binding.a.findViewById<SimpleDraweeSpanTextView?>(usernameTextId) ?: return@let
                     addIndicators(usernameText, clientStatuses, 24)
                 }
 
                 if (settings.getBool("radialStatus", false))
-                    presence.status?.let { status -> setRadialStatus(status, binding.a.findViewById(avatarId) ?: return@let, square) }
+                    setRadialStatus(presence?.status, binding.a.findViewById(avatarId) ?: return@Hook, square)
             }
         )
     }
