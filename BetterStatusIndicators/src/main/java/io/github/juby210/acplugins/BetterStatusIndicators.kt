@@ -103,7 +103,7 @@ class BetterStatusIndicators : Plugin() {
     override fun stop(context: Context?) = patcher.unpatchAll()
 
     private fun Resources.getStatusDrawables(drawable: Drawable) = arrayOf(
-        drawable,
+        drawable.clone().apply { setTint(getColor(R.c.status_green, null) - 1) },
         drawable.clone().apply { setTint(getColor(R.c.status_yellow, null) - 1) },
         drawable.clone().apply { setTint(getColor(R.c.status_red, null) - 1) }
     )
