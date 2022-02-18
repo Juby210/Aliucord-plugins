@@ -8,6 +8,11 @@ Click on plugin name in README, move downloaded file to `Aliucord/plugins` folde
 Makes codeblocks better by adding new languages, improving already existing and more.
 Uses parts of [Markwon](https://github.com/noties/Markwon) and [Prism4j](https://github.com/noties/Prism4j), licensed under Apache-2.0 License.
 
+### [BetterStatusIndicators](https://github.com/Juby210/Aliucord-plugins/raw/builds/BetterStatusIndicators.zip)
+Adds a lot of customization for status indicators (platform indicators, radial status, etc).
+
+It is a rewritten version of [Butterfly3ffect's BetterStatus](https://github.com/peter1599/Aliucord-plugins/tree/main/BetterStatus) with hopefully less bugs and better code.
+
 ### [CustomNicknameFormat](https://github.com/Juby210/Aliucord-plugins/raw/builds/CustomNicknameFormat.zip)
 Allows you to customize nickname format.
 

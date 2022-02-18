@@ -1,4 +1,5 @@
 include(":BetterCodeBlocks")
+include(":BetterStatusIndicators")
 include(":CustomNicknameFormat")
 include(":CustomTimestamps")
 include(":Experiments")
