@@ -104,8 +104,8 @@ class BetterStatusIndicators : Plugin() {
 
     private fun Resources.getStatusDrawables(drawable: Drawable) = arrayOf(
         drawable,
-        drawable.clone().apply { setTint(getColor(R.c.status_yellow, null)) },
-        drawable.clone().apply { setTint(getColor(R.c.status_red, null)) }
+        drawable.clone().apply { setTint(getColor(R.c.status_yellow, null) - 1) },
+        drawable.clone().apply { setTint(getColor(R.c.status_red, null) - 1) }
     )
 
     private fun ClientStatus.getDrawable(drawables: Array<Drawable>) = when (this) {
