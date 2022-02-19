@@ -45,7 +45,7 @@ import io.github.juby210.acplugins.bsi.*
 class BetterStatusIndicators : Plugin() {
     init {
         needsResources = true
-        settingsTab = SettingsTab(PluginSettings::class.java, SettingsTab.Type.BOTTOM_SHEET).withArgs(this)
+        settingsTab = SettingsTab(PluginSettings::class.java).withArgs(this)
     }
 
     private lateinit var mobile: Array<Drawable>
@@ -90,14 +90,14 @@ class BetterStatusIndicators : Plugin() {
                 val clientStatuses = presence.clientStatuses ?: return@Hook
 
                 val usernameText = (it.thisObject as View).findViewById<SimpleDraweeSpanTextView?>(usernameTextId) ?: return@Hook
-                addIndicators(usernameText, clientStatuses, 32)
+                addIndicators(usernameText, clientStatuses, settings.getInt("sizeUserProfileInd", 32))
             }
         )
 
         patchDMsList(square)
         patchChatStatus()
         patchChatStatusPlatforms()
-        patchRadialStatus(settings.getBool("radialStatus", false), square)
+        patchRadialStatus(settings.radialStatus, square)
     }
 
     override fun stop(context: Context?) = patcher.unpatchAll()
@@ -116,13 +116,6 @@ class BetterStatusIndicators : Plugin() {
 
     private fun Drawable.setStatusTint(key: String, res: Resources, default: Int) =
         setTint(settings.getInt(key, res.getColor(default, null) - 1))
-
-    private fun ClientStatus.getDrawable(drawables: Array<Drawable>) = when (this) {
-        ClientStatus.ONLINE -> drawables[0]
-        ClientStatus.IDLE -> drawables[1]
-        ClientStatus.DND -> drawables[2]
-        else -> null
-    }
 
     private fun TextView.appendIcon(icon: Drawable, size: Int, width: Int = size) {
         append(" ")
@@ -222,10 +215,10 @@ class BetterStatusIndicators : Plugin() {
 
                 presence?.clientStatuses?.let { clientStatuses ->
                     val usernameText = binding.a.findViewById<SimpleDraweeSpanTextView?>(usernameTextId) ?: return@let
-                    addIndicators(usernameText, clientStatuses, 24)
+                    addIndicators(usernameText, clientStatuses, settings.getInt("sizeMembersListInd", 24))
                 }
 
-                if (settings.getBool("radialStatus", false))
+                if (settings.radialStatusMembersList)
                     setRadialStatus(presence?.status, binding.a.findViewById(avatarId) ?: return@Hook, square)
             }
         )
@@ -242,9 +235,11 @@ class BetterStatusIndicators : Plugin() {
                 val presence = (it.args[1] as ChannelListItemPrivate).presence
                 val binding = channelPrivateItemBinding[it.thisObject] as WidgetChannelsListItemChannelPrivateBinding
 
-                presence?.clientStatuses?.let { clientStatuses -> addIndicators(binding.a.findViewById(id), clientStatuses, 24) }
+                presence?.clientStatuses?.let { clientStatuses ->
+                    addIndicators(binding.a.findViewById(id), clientStatuses, settings.getInt("sizeDMsInd", 24))
+                }
 
-                if (settings.getBool("radialStatus", false))
+                if (settings.radialStatusDMs)
                     setRadialStatus(presence?.status, binding.a.findViewById(avatarId), square)
             }
         )
@@ -264,7 +259,9 @@ class BetterStatusIndicators : Plugin() {
                 val entry = it.args[1] as MessageEntry
 
                 val presence = entry.message.author.presence ?: return@Hook
-                presence.status?.getDrawable(filled)?.apply { itemName.appendIcon(this, 16) }
+                presence.status?.getDrawable(filled)?.apply {
+                    itemName.appendIcon(this, settings.getInt("sizeChatStatus", 16))
+                }
             }
         )
     }
@@ -283,7 +280,12 @@ class BetterStatusIndicators : Plugin() {
                 val entry = it.args[1] as MessageEntry
 
                 val presence = entry.message.author.presence ?: return@Hook
-                addIndicators(itemName, presence.clientStatuses ?: return@Hook, 24, true)
+                addIndicators(
+                    itemName,
+                    presence.clientStatuses ?: return@Hook,
+                    settings.getInt("sizeChatStatusPlatform", 24),
+                    true
+                )
             }
         )
     }
@@ -296,30 +298,34 @@ class BetterStatusIndicators : Plugin() {
         if (!radialStatus) return
 
         // User profile
-        val avatarCutoutId = Utils.getResId("avatar_cutout", "id")
-        unpatchAvatarPresenceView = patcher.patch(
-            UserAvatarPresenceView::class.java.getDeclaredMethod("a", UserAvatarPresenceView.a::class.java),
-            Hook {
-                val data = it.args[0] as UserAvatarPresenceView.a
-                val status = data.b?.status
+        if (settings.getBool("radialStatusUserProfile", true)) {
+            val avatarCutoutId = Utils.getResId("avatar_cutout", "id")
+            unpatchAvatarPresenceView = patcher.patch(
+                UserAvatarPresenceView::class.java.getDeclaredMethod("a", UserAvatarPresenceView.a::class.java),
+                Hook {
+                    val data = it.args[0] as UserAvatarPresenceView.a
+                    val status = data.b?.status
 
-                val avatarView = (it.thisObject as View).findViewById<View>(avatarCutoutId)
-                setRadialStatus(status, avatarView)
-            }
-        )
+                    val avatarView = (it.thisObject as View).findViewById<View>(avatarCutoutId)
+                    setRadialStatus(status, avatarView)
+                }
+            )
+        }
 
         // Chat
-        val itemMessage = WidgetChatListAdapterItemMessage::class.java
-        val itemAvatarField = itemMessage.getDeclaredField("itemAvatar").apply { isAccessible = true }
-        unpatchChatRadialStatus = patcher.patch(
-            itemMessage.getDeclaredMethod("onConfigure", Int::class.javaPrimitiveType, ChatListEntry::class.java),
-            Hook {
-                val itemAvatar = itemAvatarField[it.thisObject] as View? ?: return@Hook
-                val entry = it.args[1] as MessageEntry
+        if (settings.getBool("radialStatusChat", true)) {
+            val itemMessage = WidgetChatListAdapterItemMessage::class.java
+            val itemAvatarField = itemMessage.getDeclaredField("itemAvatar").apply { isAccessible = true }
+            unpatchChatRadialStatus = patcher.patch(
+                itemMessage.getDeclaredMethod("onConfigure", Int::class.javaPrimitiveType, ChatListEntry::class.java),
+                Hook {
+                    val itemAvatar = itemAvatarField[it.thisObject] as View? ?: return@Hook
+                    val entry = it.args[1] as MessageEntry
 
-                setRadialStatus(entry.message.author.presence?.status, itemAvatar, square)
-            }
-        )
+                    setRadialStatus(entry.message.author.presence?.status, itemAvatar, square)
+                }
+            )
+        }
     }
 
     private fun setRadialStatus(status: ClientStatus?, avatarView: View, square: Boolean = false) {

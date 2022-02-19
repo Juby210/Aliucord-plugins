@@ -1,10 +1,16 @@
-version = "1.0.3"
+version = "1.0.4"
 description = "Adds a lot of customization for status indicators (platform indicators, radial status, etc)."
 
 aliucord {
     author("Butterfly3ffect", 575606699553980430L)
 
     changelog.set("""
+        1.0.4
+        ======================
+
+        * add option to disable radial status in selected areas
+        * add options to change size of indicators
+
         1.0.3
         ======================
 

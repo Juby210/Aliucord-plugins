@@ -9,6 +9,7 @@ import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import com.aliucord.PluginManager
+import com.aliucord.api.SettingsAPI
 import com.discord.api.presence.ClientStatus
 import com.discord.api.presence.ClientStatuses
 import com.discord.api.user.User
@@ -37,3 +38,19 @@ fun isPluginEnabled(name: String) = PluginManager.plugins.containsKey(name) && P
 
 val User.presence: Presence?
     get() = StoreStream.getPresences().presences[id] as Presence?
+
+inline val SettingsAPI.radialStatus
+    get() = getBool("radialStatus", false)
+
+val SettingsAPI.radialStatusDMs
+    get() = radialStatus && getBool("radialStatusDMs", true)
+
+val SettingsAPI.radialStatusMembersList
+    get() = radialStatus && getBool("radialStatusMembersList", true)
+
+fun ClientStatus.getDrawable(drawables: Array<Drawable>) = when (this) {
+    ClientStatus.ONLINE -> drawables[0]
+    ClientStatus.IDLE -> drawables[1]
+    ClientStatus.DND -> drawables[2]
+    else -> null
+}
