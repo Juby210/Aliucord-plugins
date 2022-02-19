@@ -1,10 +1,22 @@
-version = "1.0.4"
+version = "1.0.5"
 description = "Adds a lot of customization for status indicators (platform indicators, radial status, etc)."
 
 aliucord {
     author("Butterfly3ffect", 575606699553980430L)
 
     changelog.set("""
+        Known issues: {fixed}
+        ======================
+
+        * avatar cutout is almost always circular
+        * scaling bug in dms list (fixes itself when you start scrolling)
+        * animated avatars with **AlwaysAnimate** are always square
+
+        1.0.5
+        ======================
+
+        * add support for friends list
+
         1.0.4
         ======================
 

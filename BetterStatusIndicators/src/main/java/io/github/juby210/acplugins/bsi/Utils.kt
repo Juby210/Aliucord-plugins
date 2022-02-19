@@ -45,6 +45,9 @@ inline val SettingsAPI.radialStatus
 val SettingsAPI.radialStatusDMs
     get() = radialStatus && getBool("radialStatusDMs", true)
 
+val SettingsAPI.radialStatusFriendsList
+    get() = radialStatus && getBool("radialStatusFriendsList", true)
+
 val SettingsAPI.radialStatusMembersList
     get() = radialStatus && getBool("radialStatusMembersList", true)
 

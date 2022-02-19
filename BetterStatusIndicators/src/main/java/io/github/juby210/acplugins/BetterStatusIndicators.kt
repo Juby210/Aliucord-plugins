@@ -20,8 +20,7 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.Hook
 import com.discord.api.presence.ClientStatus
 import com.discord.api.presence.ClientStatuses
-import com.discord.databinding.WidgetChannelMembersListItemUserBinding
-import com.discord.databinding.WidgetChannelsListItemChannelPrivateBinding
+import com.discord.databinding.*
 import com.discord.models.presence.Presence
 import com.discord.utilities.presence.PresenceUtils
 import com.discord.views.StatusView
@@ -34,6 +33,8 @@ import com.discord.widgets.channels.memberlist.adapter.ChannelMembersListViewHol
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage
 import com.discord.widgets.chat.list.entries.ChatListEntry
 import com.discord.widgets.chat.list.entries.MessageEntry
+import com.discord.widgets.friends.FriendsListViewModel
+import com.discord.widgets.friends.WidgetFriendsListAdapter
 import com.discord.widgets.user.profile.UserProfileHeaderView
 import com.discord.widgets.user.profile.UserProfileHeaderViewModel
 import com.facebook.drawee.span.SimpleDraweeSpanTextView
@@ -95,6 +96,7 @@ class BetterStatusIndicators : Plugin() {
         )
 
         patchDMsList(square)
+        patchFriendsList(square)
         patchChatStatus()
         patchChatStatusPlatforms()
         patchRadialStatus(settings.radialStatus, square)
@@ -243,6 +245,41 @@ class BetterStatusIndicators : Plugin() {
                     setRadialStatus(presence?.status, binding.a.findViewById(avatarId), square)
             }
         )
+    }
+
+    private fun patchFriendsList(square: Boolean) {
+        val id = Utils.getResId("friends_list_item_name", "id")
+        val avatarId = Utils.getResId("friends_list_item_avatar", "id")
+
+        val itemUser = WidgetFriendsListAdapter.ItemUser::class.java
+        val itemUserBinding = itemUser.getDeclaredField("binding").apply { isAccessible = true }
+        val int = Int::class.javaPrimitiveType
+        val item = FriendsListViewModel.Item::class.java
+        patcher.patch(itemUser.getDeclaredMethod("onConfigure", int, item), Hook {
+            val presence = (it.args[1] as FriendsListViewModel.Item.Friend).presence
+            val binding = itemUserBinding[it.thisObject] as WidgetFriendsListAdapterItemFriendBinding
+
+            presence?.clientStatuses?.let { clientStatuses ->
+                addIndicators(binding.a.findViewById(id), clientStatuses, settings.getInt("sizeFriendsListInd", 24))
+            }
+
+            if (settings.radialStatusFriendsList)
+                setRadialStatus(presence?.status, binding.a.findViewById(avatarId), square)
+        })
+
+        val itemPending = WidgetFriendsListAdapter.ItemPendingUser::class.java
+        val itemPendingBinding = itemPending.getDeclaredField("binding").apply { isAccessible = true }
+        patcher.patch(itemPending.getDeclaredMethod("onConfigure", int, item), Hook {
+            val presence = (it.args[1] as FriendsListViewModel.Item.PendingFriendRequest).presence
+            val binding = itemPendingBinding[it.thisObject] as WidgetFriendsListAdapterItemPendingBinding
+
+            presence?.clientStatuses?.let { clientStatuses ->
+                addIndicators(binding.a.findViewById(id), clientStatuses, settings.getInt("sizeFriendsListInd", 24))
+            }
+
+            if (settings.radialStatusFriendsList)
+                setRadialStatus(presence?.status, binding.a.findViewById(avatarId), square)
+        })
     }
 
     private var unpatchChatStatus: Runnable? = null

@@ -108,6 +108,12 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : SettingsPage(
                 ))
                 addView(createSwitch(
                     context,
+                    "radialStatusFriendsList",
+                    "Friends List",
+                    default = true
+                ))
+                addView(createSwitch(
+                    context,
                     "radialStatusMembersList",
                     "Members List",
                     default = true
@@ -139,6 +145,12 @@ class PluginSettings(private val plugin: BetterStatusIndicators) : SettingsPage(
                 context,
                 "sizeDMsInd",
                 "DMs Indicator Size",
+                24
+            ))
+            addView(createInput(
+                context,
+                "sizeFriendsListInd",
+                "Friends List Indicator Size",
                 24
             ))
             addView(createInput(
