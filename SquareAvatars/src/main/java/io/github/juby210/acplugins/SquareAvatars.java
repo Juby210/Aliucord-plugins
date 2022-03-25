@@ -6,12 +6,12 @@
 package io.github.juby210.acplugins;
 
 import android.content.Context;
-import android.content.Intent;
 import android.text.*;
 import android.util.AttributeSet;
 import android.view.View;
 
 import com.aliucord.Constants;
+import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
@@ -19,8 +19,6 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.Hook;
 import com.aliucord.utils.DimenUtils;
 import com.aliucord.views.TextInput;
-import com.google.android.material.snackbar.BaseTransientBottomBar;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -55,16 +53,7 @@ public final class SquareAvatars extends Plugin {
                         var str = s.toString();
                         if (!str.equals("")) {
                             settings.setInt("roundCorners", Integer.parseInt(str));
-                            Snackbar.make(view, "Changes detected. Restart?", BaseTransientBottomBar.LENGTH_INDEFINITE).
-                                setAction("Restart", e -> {
-                                    var ctx = e.getContext();
-                                    var intent = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
-                                    if (intent != null) {
-                                        startActivity(Intent.makeRestartActivityTask(intent.getComponent()));
-                                        System.exit(0);
-                                    }
-                                }).
-                                show();
+                            Utils.promptRestart();
                         }
                     }
 
@@ -103,13 +92,14 @@ public final class SquareAvatars extends Plugin {
                             if (id != 0 && contains(context.getResources().getResourceName(id))) {
                                 roundingParams.b = false;
 
-                                // round corners
-                                var radii = roundingParams.c;
-                                if (radii == null) {
-                                    radii = new float[8];
-                                    roundingParams.c = radii;
+                                if (roundRadius != 0) {
+                                    var radii = roundingParams.c;
+                                    if (radii == null) {
+                                        radii = new float[8];
+                                        roundingParams.c = radii;
+                                    }
+                                    Arrays.fill(radii, roundRadius);
                                 }
-                                Arrays.fill(radii, roundRadius);
                             }
                         }
                     } catch (Throwable e) { logger.error(e); }

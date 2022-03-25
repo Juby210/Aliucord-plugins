@@ -1,7 +1,15 @@
-version = "0.1.1"
+version = "0.1.2"
 description = "Display square avatars instead of circles."
 
 aliucord.changelog.set("""
+    0.1.2
+    ======================
+
+    * cleanup code
+
+    0.1.1
+    ======================
+
     Updated {updated marginTop}
     ======================
 
