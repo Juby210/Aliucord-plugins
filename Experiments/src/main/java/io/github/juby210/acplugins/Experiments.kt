@@ -26,6 +26,7 @@ import com.discord.databinding.WidgetSettingsBinding
 import com.discord.stores.`StoreExperiments$getExperimentalAlpha$1`
 import com.discord.utilities.color.ColorCompat
 import com.discord.views.CheckedSetting
+import com.discord.widgets.settings.SettingsViewModel
 import com.discord.widgets.settings.WidgetSettings
 import com.discord.widgets.settings.developer.*
 import com.lytefast.flexinput.R
@@ -76,7 +77,7 @@ class Experiments : Plugin() {
 
         val c = WidgetSettings::class.java
         val getBinding = c.getDeclaredMethod("getBinding").apply { isAccessible = true }
-        patcher.patch(c.getDeclaredMethod("configureUI", WidgetSettings.Model::class.java), Hook {
+        patcher.patch(c.getDeclaredMethod("configureUI", SettingsViewModel.ViewState::class.java), Hook {
             with(getBinding.invoke(it.thisObject) as WidgetSettingsBinding) {
                 n.visibility = View.VISIBLE
                 o.visibility = View.VISIBLE
