@@ -6,6 +6,7 @@
 package io.github.juby210.acplugins;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
@@ -17,6 +18,7 @@ import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.Hook;
 import com.aliucord.patcher.PreHook;
+import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
 import com.discord.models.message.Message;
 import com.discord.stores.*;
 import com.discord.utilities.textprocessing.*;
@@ -29,7 +31,9 @@ import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage;
 import com.discord.widgets.chat.list.adapter.WidgetChatListItem;
 import com.discord.widgets.chat.list.entries.MessageEntry;
 import com.facebook.drawee.span.DraweeSpanStringBuilder;
+import com.google.gson.stream.JsonReader;
 
+import java.io.StringReader;
 import java.util.*;
 
 import io.github.juby210.acplugins.messagelogger.MessageRecord;
@@ -39,8 +43,46 @@ import kotlin.jvm.functions.Function1;
 @AliucordPlugin
 @SuppressWarnings({ "unchecked", "CommentedOutCode" })
 public final class MessageLogger extends Plugin {
+
+    private Context context;
+
     @Override
     public void start(Context context) throws Throwable {
+        this.context = context;
+        deletedMessagesRecord.clear();
+        messageRecord.clear();
+        editedMessagesRecord.clear();
+        SQLite sqlite = new SQLite(context);
+        Cursor deletedMessages = sqlite.getAllDeletedMessages();
+        if (deletedMessages.moveToFirst() && deletedMessages.getCount() > 0) {
+            do {
+                long messageId = deletedMessages.getLong(0);
+                var deleteData = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(deletedMessages.getString(1))), MessageRecord.DeleteData.class);
+                var deletedMessageRecord = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(deletedMessages.getString(2))), MessageRecord.class);
+                long channelId = deletedMessageRecord.message.getChannelId();
+                deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>()).add(messageId);
+                var record = messageRecord.computeIfAbsent(messageId, k -> new MessageRecord());
+                record.message = deletedMessageRecord.message;
+                record.editHistory = deletedMessageRecord.editHistory;
+                record.deleteData = deleteData;
+
+            } while (deletedMessages.moveToNext());
+        }
+        deletedMessages.close();
+        Cursor editedMessages = sqlite.getAllEditedMessages();
+        if (editedMessages.moveToFirst() && editedMessages.getCount() > 0) {
+            do {
+                long messageId = editedMessages.getLong(0);
+                var editedMessageRecord = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(editedMessages.getString(1))), MessageRecord.class);
+                long channelId = editedMessageRecord.message.getChannelId();
+                var record = messageRecord.computeIfAbsent(messageId, k -> new MessageRecord());
+                record.editHistory = editedMessageRecord.editHistory;
+                record.message = editedMessageRecord.message;
+                var editRecord = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
+                editRecord.add(messageId);
+            } while (editedMessages.moveToNext());
+        }
+        editedMessages.close();
         new ReAdder(this, patcher);
 
         patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
@@ -93,6 +135,15 @@ public final class MessageLogger extends Plugin {
                     var data = adapter.getInternalData();
                     var i = CollectionUtils.findIndex(data, e -> e instanceof MessageEntry && ((MessageEntry) e).getMessage().getId() == msg.getId());
                     if (i != -1) adapter.notifyItemChanged(i);
+                    SQLite sqlite = new SQLite(context);
+                    Cursor editHistory = sqlite.getAllMessageEdits(msg.getId());
+                    if (editHistory.moveToFirst()) {
+                        do {
+                            var editedMessage = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(editHistory.getString(1))), MessageRecord.class);
+                            record.editHistory = editedMessage.editHistory;
+                        } while (editHistory.moveToNext());
+                    }
+                    sqlite.addNewMessage(record);
                 }
             }
 
@@ -121,6 +172,8 @@ public final class MessageLogger extends Plugin {
                     var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
                     record.message = msg;
                     record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
+                    SQLite sqlite = new SQLite(context);
+                    sqlite.addNewMessageEdit(record);
                 }
             }
 

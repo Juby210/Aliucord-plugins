@@ -1,2 +1,2 @@
-version = "0.0.3"
-description = "Temporary saves deleted and edited messages. WIP"
+version = "1.0.0"
+description = "Saves deleted / edited messages to a SQLite database and restores them when the channel is opened."
