@@ -11,6 +11,11 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.view.View;
+import android.widget.*;
+
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.CollectionUtils;
 import com.aliucord.Logger;
@@ -27,6 +32,7 @@ import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView;
 import com.discord.widgets.chat.list.WidgetChatList;
+import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage;
 import com.discord.widgets.chat.list.adapter.WidgetChatListItem;
 import com.discord.widgets.chat.list.entries.MessageEntry;
@@ -44,6 +50,12 @@ import kotlin.jvm.functions.Function1;
 @SuppressWarnings({ "unchecked", "CommentedOutCode" })
 public final class MessageLogger extends Plugin {
 
+    public static WidgetChatList chatList;
+    public final Map<Long, Message> cachedMessages = new HashMap<>();
+    public final Map<Long, List<Long>> deletedMessagesRecord = new HashMap<>();
+    public final Map<Long, List<Long>> editedMessagesRecord = new HashMap<>();
+    public final Map<Long, MessageRecord> messageRecord = new HashMap<>();
+    private final Logger logger = new Logger("MessageLogger");
     private Context context;
 
     @Override
@@ -65,7 +77,6 @@ public final class MessageLogger extends Plugin {
                 record.message = deletedMessageRecord.message;
                 record.editHistory = deletedMessageRecord.editHistory;
                 record.deleteData = deleteData;
-
             } while (deletedMessages.moveToNext());
         }
         deletedMessages.close();
@@ -87,6 +98,7 @@ public final class MessageLogger extends Plugin {
 
         patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
 
+        patchWidgetChatListActions();
         patchAddMessages();
         patchDeleteMessages();
         patchUpdateMessages();
@@ -98,14 +110,44 @@ public final class MessageLogger extends Plugin {
         patcher.unpatchAll();
     }
 
-    public final Map<Long, Message> cachedMessages = new HashMap<>();
-    public final Map<Long, List<Long>> deletedMessagesRecord = new HashMap<>();
-    public final Map<Long, List<Long>> editedMessagesRecord = new HashMap<>();
-    public final Map<Long, MessageRecord> messageRecord = new HashMap<>();
-
-    public static WidgetChatList chatList;
-
-    private final Logger logger = new Logger("MessageLogger");
+    // Requires app to be restarted after removing from log
+    private void patchWidgetChatListActions() {
+        try {
+            patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
+                new Hook((cf) -> {
+                    var modal = (WidgetChatListActions.Model) cf.args[0];
+                    var message = modal.getMessage();
+                    SQLite sqlite = new SQLite(context);
+                    var messageId = message.getId();
+                    var isDeleted = sqlite.isMessageDeleted(messageId);
+                    if (isDeleted || sqlite.isMessageEdited(messageId)) {
+                        var viewID = View.generateViewId();
+                        var hideIcon = ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+                        var actions = (WidgetChatListActions) cf.thisObject;
+                        var scrollView = (NestedScrollView) actions.getView();
+                        var lay = (LinearLayout) scrollView.getChildAt(0);
+                        if (lay.findViewById(viewID) == null) {
+                            TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
+                            tw.setId(viewID);
+                            tw.setText(isDeleted ? "Remove Deleted Message" : "Remove Edit History");
+                            tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
+                            lay.addView(tw, lay.getChildCount());
+                            tw.setOnClickListener((v) -> {
+                                if (isDeleted) {
+                                    sqlite.removeDeletedMessage(messageId);
+                                } else {
+                                    sqlite.removeEditedMessage(messageId);
+                                }
+                                Toast.makeText(context, "Removed From Logs", Toast.LENGTH_SHORT).show();
+                                ((WidgetChatListActions) cf.thisObject).dismiss();
+                            });
+                        }
+                    }
+                }));
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void patchAddMessages() {
         patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
@@ -258,7 +300,7 @@ public final class MessageLogger extends Plugin {
                     }
                 }
                 textView.setDraweeSpanStringBuilder(builder);
-            } catch (Throwable e) { logger.error(e); }
+            } catch (Throwable e) {logger.error(e);}
         }));
     }
 

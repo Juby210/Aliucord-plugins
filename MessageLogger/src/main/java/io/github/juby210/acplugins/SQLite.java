@@ -57,6 +57,32 @@ public class SQLite extends SQLiteOpenHelper {
         }
     }
 
+    public void removeDeletedMessage(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
+        db.execSQL(query, new Object[]{id});
+    }
+
+    public void removeEditedMessage(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "DELETE FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
+        db.execSQL(query, new Object[]{id});
+    }
+
+    public Boolean isMessageDeleted(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
+        return cursor.getCount() > 0;
+    }
+
+    public Boolean isMessageEdited(long id) {
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "SELECT * FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
+        return cursor.getCount() > 0;
+    }
+
     public Cursor getAllEditedMessages() {
         SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_EDITS;
