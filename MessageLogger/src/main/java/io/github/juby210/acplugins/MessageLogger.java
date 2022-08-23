@@ -12,21 +12,27 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.view.View;
-import android.widget.*;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.CollectionUtils;
 import com.aliucord.Logger;
+import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.Hook;
 import com.aliucord.patcher.PreHook;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
 import com.discord.models.message.Message;
-import com.discord.stores.*;
-import com.discord.utilities.textprocessing.*;
+import com.discord.stores.StoreMessageState;
+import com.discord.stores.StoreMessagesHolder;
+import com.discord.stores.StoreStream;
+import com.discord.utilities.textprocessing.DiscordParser;
+import com.discord.utilities.textprocessing.MessagePreprocessor;
+import com.discord.utilities.textprocessing.MessageRenderContext;
 import com.discord.utilities.textprocessing.node.EditedMessageNode;
 import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
@@ -40,7 +46,10 @@ import com.facebook.drawee.span.DraweeSpanStringBuilder;
 import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.github.juby210.acplugins.messagelogger.MessageRecord;
 import io.github.juby210.acplugins.messagelogger.ReAdder;
@@ -61,6 +70,9 @@ public final class MessageLogger extends Plugin {
     @Override
     public void start(Context context) throws Throwable {
         this.context = context;
+
+        settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET);
+
         deletedMessagesRecord.clear();
         messageRecord.clear();
         editedMessagesRecord.clear();
@@ -111,42 +123,39 @@ public final class MessageLogger extends Plugin {
     }
 
     // Requires app to be restarted after removing from log
-    private void patchWidgetChatListActions() {
-        try {
-            patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
-                new Hook((cf) -> {
-                    var modal = (WidgetChatListActions.Model) cf.args[0];
-                    var message = modal.getMessage();
-                    SQLite sqlite = new SQLite(context);
-                    var messageId = message.getId();
-                    var isDeleted = sqlite.isMessageDeleted(messageId);
-                    if (isDeleted || sqlite.isMessageEdited(messageId)) {
-                        var viewID = View.generateViewId();
-                        var hideIcon = ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
-                        var actions = (WidgetChatListActions) cf.thisObject;
-                        var scrollView = (NestedScrollView) actions.getView();
-                        var lay = (LinearLayout) scrollView.getChildAt(0);
-                        if (lay.findViewById(viewID) == null) {
-                            TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
-                            tw.setId(viewID);
-                            tw.setText(isDeleted ? "Remove Deleted Message" : "Remove Edit History");
-                            tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
-                            lay.addView(tw, lay.getChildCount());
-                            tw.setOnClickListener((v) -> {
-                                if (isDeleted) {
-                                    sqlite.removeDeletedMessage(messageId);
-                                } else {
-                                    sqlite.removeEditedMessage(messageId);
-                                }
-                                Toast.makeText(context, "Removed From Logs", Toast.LENGTH_SHORT).show();
-                                ((WidgetChatListActions) cf.thisObject).dismiss();
-                            });
-                        }
+    private void patchWidgetChatListActions() throws Throwable {
+        patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
+            new Hook((cf) -> {
+                var modal = (WidgetChatListActions.Model) cf.args[0];
+                var message = modal.getMessage();
+                SQLite sqlite = new SQLite(context);
+                var messageId = message.getId();
+                var isDeleted = sqlite.isMessageDeleted(messageId);
+                if (isDeleted || sqlite.isMessageEdited(messageId)) {
+                    var viewID = View.generateViewId();
+                    var hideIcon = ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+                    var actions = (WidgetChatListActions) cf.thisObject;
+                    var scrollView = (NestedScrollView) actions.getView();
+                    var lay = (LinearLayout) scrollView.getChildAt(0);
+                    if (lay.findViewById(viewID) == null) {
+                        TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
+                        tw.setId(viewID);
+                        tw.setText(isDeleted ? "Remove Deleted Message" : "Remove Edit History");
+                        tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
+                        lay.addView(tw, lay.getChildCount());
+                        tw.setOnClickListener((v) -> {
+                            if (isDeleted) {
+                                sqlite.removeDeletedMessage(messageId);
+                            } else {
+                                sqlite.removeEditedMessage(messageId);
+                            }
+                            Utils.showToast("Removed From Logs");
+                            ((WidgetChatListActions) cf.thisObject).dismiss();
+                        });
                     }
-                }));
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
+                }
+            })
+        );
     }
 
     private void patchAddMessages() {
@@ -160,11 +169,11 @@ public final class MessageLogger extends Plugin {
         patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
             var channelId = (long) param.args[0];
             var newDeleted = (List<Long>) param.args[1];
-
             var updateMessages = StoreStream.getChannelsSelected().getId() == channelId;
             for (var id : newDeleted) {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
+                SQLite sqlite = new SQLite(context);
                 // User author;
                 // if (!selfDelete && (author = msg.getAuthor()) != null && new CoreUser(author).getId() == StoreStream.getUsers().getMe().getId()) selfDelete = true;
                 var channelDeletes = deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
@@ -177,7 +186,6 @@ public final class MessageLogger extends Plugin {
                     var data = adapter.getInternalData();
                     var i = CollectionUtils.findIndex(data, e -> e instanceof MessageEntry && ((MessageEntry) e).getMessage().getId() == msg.getId());
                     if (i != -1) adapter.notifyItemChanged(i);
-                    SQLite sqlite = new SQLite(context);
                     Cursor editHistory = sqlite.getAllMessageEdits(msg.getId());
                     if (editHistory.moveToFirst()) {
                         do {
@@ -203,6 +211,8 @@ public final class MessageLogger extends Plugin {
                 var channelId = msg.getChannelId();
                 var origMsg = getCachedMessage(channelId, id);
 
+                SQLite sqlite = new SQLite(context);
+
                 String content;
                 if (
                     origMsg != null &&
@@ -214,7 +224,6 @@ public final class MessageLogger extends Plugin {
                     var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
                     record.message = msg;
                     record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
-                    SQLite sqlite = new SQLite(context);
                     sqlite.addNewMessageEdit(record);
                 }
             }
