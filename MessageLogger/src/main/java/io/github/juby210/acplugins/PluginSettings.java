@@ -156,7 +156,7 @@ public class PluginSettings extends BottomSheet {
                 sqlite = new SQLite(requireContext());
                 sqlite.clearGuilds();
                 sqlite.close();
-                Utils.showToast("Cleared all " + (isWhitelist ? "whitelisted" : "blacklisted") + " guilds from the database (restart required)");
+                Utils.showToast("Cleared all " + (isWhitelist ? "whitelisted" : "blacklisted") + " guilds from the database");
                 confirmDelete.dismiss();
                 dismiss();
             });
@@ -174,7 +174,7 @@ public class PluginSettings extends BottomSheet {
                 sqlite = new SQLite(requireContext());
                 sqlite.clearChannels();
                 sqlite.close();
-                Utils.showToast("Cleared all " + (isChannelWhitelist ? "whitelisted" : "blacklisted") + " channels from the database (restart required)");
+                Utils.showToast("Cleared all " + (isChannelWhitelist ? "whitelisted" : "blacklisted") + " channels from the database");
                 confirmDelete.dismiss();
                 dismiss();
             });
