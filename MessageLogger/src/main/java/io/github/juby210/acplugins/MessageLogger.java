@@ -195,10 +195,11 @@ public final class MessageLogger extends Plugin {
                     tw.setOnClickListener((v) -> {
                         if (isWhitelisted) {
                             sqlite.removeChannelFromWhitelist(channelId);
+                            sqlite.close();
                         } else {
                             sqlite.addChannelToWhitelist(channelId);
+                            sqlite.close();
                         }
-                        sqlite.close();
                         ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
                     });
                 }

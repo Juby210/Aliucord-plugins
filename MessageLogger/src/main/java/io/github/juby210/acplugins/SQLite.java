@@ -143,26 +143,46 @@ public class SQLite extends SQLiteOpenHelper {
 
     public void addGuildToWhitelist(long id) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
-        db.execSQL(query, new Object[]{id});
+        if (getBoolSetting("whitelist", true)) {
+            String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
+            db.execSQL(query, new Object[]{id});
+        }else {
+            String query = "DELETE FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
+            db.execSQL(query, new Object[]{id});
+        }
     }
 
     public void removeGuildFromWhitelist(long id) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "DELETE FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
-        db.execSQL(query, new Object[]{id});
+        if (!getBoolSetting("whitelist", true)) {
+            String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
+            db.execSQL(query, new Object[]{id});
+        }else {
+            String query = "DELETE FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
+            db.execSQL(query, new Object[]{id});
+        }
     }
 
     public void addChannelToWhitelist(long id) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
-        db.execSQL(query, new Object[]{id});
+        if (getBoolSetting("channelWhitelist", true)) {
+            String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
+            db.execSQL(query, new Object[]{id});
+        }else {
+            String query = "DELETE FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
+            db.execSQL(query, new Object[]{id});
+        }
     }
 
     public void removeChannelFromWhitelist(long id) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "DELETE FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
-        db.execSQL(query, new Object[]{id});
+        if (!getBoolSetting("channelWhitelist", true)) {
+            String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
+            db.execSQL(query, new Object[]{id});
+        }else {
+            String query = "DELETE FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
+            db.execSQL(query, new Object[]{id});
+        }
     }
 
     public Boolean isMessageDeleted(long id) {
