@@ -11,6 +11,7 @@ import com.aliucord.fragments.ConfirmDialog;
 import com.aliucord.views.Button;
 import com.aliucord.views.DangerButton;
 import com.aliucord.widgets.BottomSheet;
+import com.discord.views.CheckedSetting;
 
 public class PluginSettings extends BottomSheet {
 
@@ -18,6 +19,8 @@ public class PluginSettings extends BottomSheet {
 
     Boolean isWhitelist;
     Boolean isChannelWhitelist;
+    Boolean logEdits;
+    Boolean logDeletes;
     SQLite sqlite;
 
     @SuppressLint("SetTextI18n")
@@ -28,6 +31,9 @@ public class PluginSettings extends BottomSheet {
 
         isWhitelist = sqlite.getBoolSetting("whitelist", true);
         isChannelWhitelist = sqlite.getBoolSetting("channelWhitelist", false);
+        logEdits = sqlite.getBoolSetting("logEdits", true);
+        logDeletes = sqlite.getBoolSetting("logDeletes", true);
+
         sqlite.close();
         var context = requireContext();
         setPadding(20);
@@ -35,6 +41,10 @@ public class PluginSettings extends BottomSheet {
         TextView title = new TextView(context, null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Header);
         title.setText("Message Logger");
         title.setGravity(Gravity.START);
+
+        TextView logging = new TextView(context, null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Header);
+        logging.setText("Logging");
+        logging.setGravity(Gravity.CENTER_HORIZONTAL);
 
         Button guildWhitelist = new Button(context);
         guildWhitelist.setText("Toggle Whitelist / Blacklist For Guilds");
@@ -55,6 +65,30 @@ public class PluginSettings extends BottomSheet {
             isChannelWhitelist = !isChannelWhitelist;
             Utils.showToast("Channels will now need to be " + (isChannelWhitelist ? "whitelisted" : "blacklisted"));
         });
+
+        CheckedSetting logEditsSwitch = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Edits", "Log edited messages to the database");
+        logEditsSwitch.setChecked(logEdits);
+        logEditsSwitch.setOnCheckedListener((v) -> {
+            sqlite = new SQLite(requireContext());
+            sqlite.setBoolSetting("logEdits", !logEdits);
+            sqlite.close();
+            logEdits = !logEdits;
+            Utils.showToast(logEdits ? "Now logging edited messages" : "No longer logging edited messages");
+        });
+
+        CheckedSetting logDeletesSwitch = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Deletes", "Log deleted messages to the database");
+        logDeletesSwitch.setChecked(logDeletes);
+        logDeletesSwitch.setOnCheckedListener((v) -> {
+            sqlite = new SQLite(requireContext());
+            sqlite.setBoolSetting("logDeletes", !logDeletes);
+            sqlite.close();
+            logDeletes = !logDeletes;
+            Utils.showToast(logDeletes ? "Now logging deleted messages" : "No longer logging deleted messages");
+        });
+
+        TextView danger = new TextView(context, null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Header);
+        danger.setText("Database");
+        danger.setGravity(Gravity.CENTER_HORIZONTAL);
 
         DangerButton clearEditLogs = new DangerButton(context);
         clearEditLogs.setText("Clear Edit Logs");
@@ -129,8 +163,12 @@ public class PluginSettings extends BottomSheet {
             confirmDelete.show(getParentFragmentManager(), "ClearChannels");
         });
         addView(title);
+        addView(logging);
         addView(guildWhitelist);
         addView(channelWhitelist);
+        addView(logEditsSwitch);
+        addView(logDeletesSwitch);
+        addView(danger);
         addView(clearEditLogs);
         addView(clearDeleteLogs);
         addView(clearGuilds);

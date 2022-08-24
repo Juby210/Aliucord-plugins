@@ -195,11 +195,10 @@ public final class MessageLogger extends Plugin {
                     tw.setOnClickListener((v) -> {
                         if (isWhitelisted) {
                             sqlite.removeChannelFromWhitelist(channelId);
-                            sqlite.close();
                         } else {
                             sqlite.addChannelToWhitelist(channelId);
-                            sqlite.close();
                         }
+                        sqlite.close();
                         ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
                     });
                 }
@@ -270,6 +269,7 @@ public final class MessageLogger extends Plugin {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
                 SQLite sqlite = new SQLite(context);
+                if (!sqlite.getBoolSetting("logDeletes", true)) continue;
                 var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
                 if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
@@ -327,7 +327,8 @@ public final class MessageLogger extends Plugin {
                     origMsg != null &&
                         (content = origMsg.getContent()) != null &&
                         !content.equals(msg.getContent()) &&
-                        sqlite.isChannelWhitelisted(channelId)
+                        sqlite.isChannelWhitelisted(channelId) &&
+                        sqlite.getBoolSetting("logEdits", true)
                 ) {
                     if (guildId == 0 || sqlite.isGuildWhitelisted(guildId)) {
                         var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
