@@ -242,7 +242,7 @@ public class SQLite extends SQLiteOpenHelper {
         db.execSQL(query);
         query = "INSERT INTO " + TABLE_NAME_SETTINGS + " SELECT * FROM exportdb." + TABLE_NAME_SETTINGS;
         db.execSQL(query);
-        Utils.showToast("Successfully imported database");
+        Utils.showToast("Successfully imported database (restart required)");
     }
 
     public void exportDatabase() {

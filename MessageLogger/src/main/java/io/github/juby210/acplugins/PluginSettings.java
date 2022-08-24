@@ -102,7 +102,7 @@ public class PluginSettings extends BottomSheet {
         });
 
         Button importDatabase = new Button(context);
-        importDatabase.setText("Import Database");
+        importDatabase.setText("Import Database (Requires Restart)");
         importDatabase.setOnClickListener((v) -> {
             sqlite = new SQLite(requireContext());
             sqlite.importDatabase();
@@ -110,7 +110,7 @@ public class PluginSettings extends BottomSheet {
         });
 
         DangerButton clearEditLogs = new DangerButton(context);
-        clearEditLogs.setText("Clear Edit Logs");
+        clearEditLogs.setText("Clear Edit Logs (Requires Restart)");
         clearEditLogs.setOnClickListener((v) -> {
             ConfirmDialog confirmDelete = new ConfirmDialog()
                 .setTitle("Clear All Edited Messages?")
@@ -128,7 +128,7 @@ public class PluginSettings extends BottomSheet {
             confirmDelete.show(getParentFragmentManager(), "ClearEditedMessages");
         });
         DangerButton clearDeleteLogs = new DangerButton(context);
-        clearDeleteLogs.setText("Clear Delete Logs");
+        clearDeleteLogs.setText("Clear Delete Logs (Requires Restart)");
         clearDeleteLogs.setOnClickListener((v) -> {
             ConfirmDialog confirmDelete = new ConfirmDialog()
                 .setTitle("Clear All Deleted Messages?")
@@ -146,7 +146,7 @@ public class PluginSettings extends BottomSheet {
             confirmDelete.show(getParentFragmentManager(), "ClearDeletedMessages");
         });
         DangerButton clearGuilds = new DangerButton(context);
-        clearGuilds.setText("Clear Guild " + (isWhitelist ? "Whitelist" : "Blacklist"));
+        clearGuilds.setText("Clear Guild " + (isWhitelist ? "Whitelist" : "Blacklist") + " (Requires Restart)");
         clearGuilds.setOnClickListener((v) -> {
             ConfirmDialog confirmDelete = new ConfirmDialog()
                 .setTitle("Clear Guild " + (isWhitelist ? "Whitelist" : "Blacklist"))
@@ -164,7 +164,7 @@ public class PluginSettings extends BottomSheet {
             confirmDelete.show(getParentFragmentManager(), "ClearGuilds");
         });
         DangerButton clearChannels = new DangerButton(context);
-        clearChannels.setText("Clear Channel " + (isWhitelist ? "Whitelist" : "Blacklist"));
+        clearChannels.setText("Clear Channel " + (isWhitelist ? "Whitelist" : "Blacklist") + " (Requires Restart)");
         clearChannels.setOnClickListener((v) -> {
             ConfirmDialog confirmDelete = new ConfirmDialog()
                 .setTitle("Clear Channel " + (isChannelWhitelist ? "Whitelist" : "Blacklist"))
