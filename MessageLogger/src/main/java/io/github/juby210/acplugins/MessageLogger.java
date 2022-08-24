@@ -11,7 +11,6 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,7 +27,6 @@ import com.aliucord.patcher.Hook;
 import com.aliucord.patcher.PreHook;
 import com.aliucord.utils.ReflectUtils;
 import com.aliucord.wrappers.ChannelWrapper;
-import com.discord.api.channel.Channel;
 import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
 import com.discord.models.domain.ModelMessageDelete;
@@ -269,7 +267,10 @@ public final class MessageLogger extends Plugin {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
                 SQLite sqlite = new SQLite(context);
-                if (!sqlite.getBoolSetting("logDeletes", true)) continue;
+                if (!sqlite.getBoolSetting("logDeletes", true)) {
+                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
+                    continue;
+                }
                 var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
                 if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
