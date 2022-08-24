@@ -11,6 +11,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,7 +26,12 @@ import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.Hook;
 import com.aliucord.patcher.PreHook;
+import com.aliucord.utils.ReflectUtils;
+import com.aliucord.wrappers.ChannelWrapper;
+import com.discord.api.channel.Channel;
+import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
+import com.discord.models.domain.ModelMessageDelete;
 import com.discord.models.message.Message;
 import com.discord.stores.StoreMessageState;
 import com.discord.stores.StoreMessagesHolder;
@@ -37,15 +43,20 @@ import com.discord.utilities.textprocessing.node.EditedMessageNode;
 import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView;
+import com.discord.widgets.channels.list.WidgetChannelsListItemChannelActions;
 import com.discord.widgets.chat.list.WidgetChatList;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage;
 import com.discord.widgets.chat.list.adapter.WidgetChatListItem;
 import com.discord.widgets.chat.list.entries.MessageEntry;
+import com.discord.widgets.guilds.contextmenu.GuildContextMenuViewModel;
+import com.discord.widgets.guilds.contextmenu.WidgetGuildContextMenu;
 import com.facebook.drawee.span.DraweeSpanStringBuilder;
 import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -111,6 +122,8 @@ public final class MessageLogger extends Plugin {
         patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
 
         patchWidgetChatListActions();
+        patchWidgetChannelsListItemChannelActions();
+        patchWidgetGuildContextMenu();
         patchAddMessages();
         patchDeleteMessages();
         patchUpdateMessages();
@@ -158,10 +171,88 @@ public final class MessageLogger extends Plugin {
         );
     }
 
+    private void patchWidgetChannelsListItemChannelActions() throws Throwable {
+        patcher.patch(WidgetChannelsListItemChannelActions.class.getDeclaredMethod("configureUI", WidgetChannelsListItemChannelActions.Model.class),
+            new Hook((cf) -> {
+                var modal = (WidgetChannelsListItemChannelActions.Model) cf.args[0];
+                var channel = modal.getChannel();
+                SQLite sqlite = new SQLite(context);
+                Log.d("MessageLogger", channel.toString());
+                var channelId = channel.k();
+                var isWhitelisted = sqlite.isChannelWhitelisted(channelId);
+                var viewID = View.generateViewId();
+                var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+                var actions = (WidgetChannelsListItemChannelActions) cf.thisObject;
+                var scrollView = (NestedScrollView) actions.getView();
+                var lay = (LinearLayout) scrollView.getChildAt(0);
+                if (lay.findViewById(viewID) == null) {
+                    TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
+                    tw.setId(viewID);
+                    tw.setText(isWhitelisted ? "Disable Logging" : "Enable Logging");
+                    tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    lay.addView(tw, lay.getChildCount());
+                    tw.setOnClickListener((v) -> {
+                        if (isWhitelisted) {
+                            sqlite.removeChannelFromWhitelist(channelId);
+                        } else {
+                            sqlite.addChannelToWhitelist(channelId);
+                        }
+                        ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
+                    });
+                }
+            })
+        );
+    }
+
+    private void patchWidgetGuildContextMenu() throws Throwable {
+        patcher.patch(WidgetGuildContextMenu.class.getDeclaredMethod("configureUI", GuildContextMenuViewModel.ViewState.class),
+            new Hook((cf) -> {
+                var state = (GuildContextMenuViewModel.ViewState.Valid) cf.args[0];
+                Method method = null;
+                WidgetGuildContextMenuBinding binding = null;
+                try {
+                    method = ReflectUtils.getMethodByArgs(WidgetGuildContextMenu.class, "getBinding");
+                    binding = (WidgetGuildContextMenuBinding) method.invoke(cf.thisObject);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+                LinearLayout lay = (LinearLayout) binding.e.getParent();
+                var guild = state.getGuild();
+                SQLite sqlite = new SQLite(context);
+                var guildId = guild.getId();
+                var isWhitelisted = sqlite.isGuildWhitelisted(guildId);
+                var viewID = View.generateViewId();
+                var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+                if (lay.findViewById(viewID) == null) {
+                    TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.ContextMenuTextOption);
+                    tw.setId(viewID);
+                    tw.setText(isWhitelisted ? "Disable Logging" : "Enable Logging");
+                    tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    lay.addView(tw, lay.getChildCount());
+                    tw.setOnClickListener((v) -> {
+                        if (isWhitelisted) {
+                            sqlite.removeGuildFromWhitelist(guildId);
+                        } else {
+                            sqlite.addGuildToWhitelist(guildId);
+                        }
+                        lay.setVisibility(View.GONE);
+                    });
+                }
+            })
+        );
+    }
+
     private void patchAddMessages() {
         patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
             var messages = (List<Message>) param.args[0];
-            for (var message : messages) updateCached(message.getId(), message);
+            SQLite sqlite = new SQLite(context);
+            for (var message : messages) {
+                var channel = StoreStream.getChannels().getChannel(message.getChannelId());
+                var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
+                if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) continue;
+                if (!sqlite.isChannelWhitelisted(message.getChannelId())) continue;
+                updateCached(message.getId(), message);
+            }
         }));
     }
 
@@ -174,6 +265,16 @@ public final class MessageLogger extends Plugin {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
                 SQLite sqlite = new SQLite(context);
+                var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
+                var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
+                if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
+                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
+                    continue;
+                }
+                if (!sqlite.isChannelWhitelisted(msg.getChannelId())) {
+                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
+                    continue;
+                }
                 // User author;
                 // if (!selfDelete && (author = msg.getAuthor()) != null && new CoreUser(author).getId() == StoreStream.getUsers().getMe().getId()) selfDelete = true;
                 var channelDeletes = deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
@@ -212,19 +313,24 @@ public final class MessageLogger extends Plugin {
                 var origMsg = getCachedMessage(channelId, id);
 
                 SQLite sqlite = new SQLite(context);
+                var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
+                var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
 
                 String content;
                 if (
                     origMsg != null &&
                         (content = origMsg.getContent()) != null &&
-                        !content.equals(msg.getContent())
+                        !content.equals(msg.getContent()) &&
+                        sqlite.isChannelWhitelisted(channelId)
                 ) {
-                    var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
-                    channelEdits.add(id);
-                    var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
-                    record.message = msg;
-                    record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
-                    sqlite.addNewMessageEdit(record);
+                    if (guildId == 0 || sqlite.isGuildWhitelisted(guildId)) {
+                        var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
+                        channelEdits.add(id);
+                        var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
+                        record.message = msg;
+                        record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
+                        sqlite.addNewMessageEdit(record);
+                    }
                 }
             }
 

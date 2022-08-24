@@ -7,5 +7,6 @@ aliucord.changelog.set("""
 
     * Added SQLite saving for deleted messages and edit history
     * Added the ability to clear data in plugin settings
+    * Added guild whitelist / blacklist (default is whitelist) and channel whitelist / blacklist (default is blacklist)
 
 """.trimIndent())
