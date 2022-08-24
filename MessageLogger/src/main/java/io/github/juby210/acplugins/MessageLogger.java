@@ -117,6 +117,7 @@ public final class MessageLogger extends Plugin {
             } while (editedMessages.moveToNext());
         }
         editedMessages.close();
+        sqlite.close();
         new ReAdder(this, patcher);
 
         patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
@@ -162,6 +163,7 @@ public final class MessageLogger extends Plugin {
                             } else {
                                 sqlite.removeEditedMessage(messageId);
                             }
+                            sqlite.close();
                             Utils.showToast("Removed From Logs");
                             ((WidgetChatListActions) cf.thisObject).dismiss();
                         });
@@ -196,6 +198,7 @@ public final class MessageLogger extends Plugin {
                         } else {
                             sqlite.addChannelToWhitelist(channelId);
                         }
+                        sqlite.close();
                         ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
                     });
                 }
@@ -234,6 +237,7 @@ public final class MessageLogger extends Plugin {
                         } else {
                             sqlite.addGuildToWhitelist(guildId);
                         }
+                        sqlite.close();
                         lay.setVisibility(View.GONE);
                     });
                 }
@@ -244,12 +248,13 @@ public final class MessageLogger extends Plugin {
     private void patchAddMessages() {
         patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
             var messages = (List<Message>) param.args[0];
-            SQLite sqlite = new SQLite(context);
             for (var message : messages) {
+                SQLite sqlite = new SQLite(context);
                 var channel = StoreStream.getChannels().getChannel(message.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
                 if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) continue;
                 if (!sqlite.isChannelWhitelisted(message.getChannelId())) continue;
+                sqlite.close();
                 updateCached(message.getId(), message);
             }
         }));
@@ -294,6 +299,7 @@ public final class MessageLogger extends Plugin {
                         } while (editHistory.moveToNext());
                     }
                     sqlite.addNewMessage(record);
+                    sqlite.close();
                 }
             }
 
@@ -331,6 +337,7 @@ public final class MessageLogger extends Plugin {
                         sqlite.addNewMessageEdit(record);
                     }
                 }
+                sqlite.close();
             }
 
             updateCached(id, msg);

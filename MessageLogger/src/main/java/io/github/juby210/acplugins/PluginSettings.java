@@ -18,15 +18,17 @@ public class PluginSettings extends BottomSheet {
 
     Boolean isWhitelist;
     Boolean isChannelWhitelist;
+    SQLite sqlite;
 
     @SuppressLint("SetTextI18n")
     @Override
     public void onViewCreated(View view, Bundle bundle) {
         super.onViewCreated(view, bundle);
-        SQLite sqlite = new SQLite(requireContext());
+        sqlite = new SQLite(requireContext());
 
         isWhitelist = sqlite.getBoolSetting("whitelist", true);
         isChannelWhitelist = sqlite.getBoolSetting("channelWhitelist", false);
+        sqlite.close();
         var context = requireContext();
         setPadding(20);
 
@@ -37,7 +39,9 @@ public class PluginSettings extends BottomSheet {
         Button guildWhitelist = new Button(context);
         guildWhitelist.setText("Toggle Whitelist / Blacklist For Guilds");
         guildWhitelist.setOnClickListener((v) -> {
+            sqlite = new SQLite(requireContext());
             sqlite.setBoolSetting("whitelist", !isWhitelist);
+            sqlite.close();
             isWhitelist = !isWhitelist;
             Utils.showToast("Guilds will now need to be " + (isWhitelist ? "whitelisted" : "blacklisted"));
         });
@@ -45,7 +49,9 @@ public class PluginSettings extends BottomSheet {
         Button channelWhitelist = new Button(context);
         channelWhitelist.setText("Toggle Whitelist / Blacklist For Channels");
         channelWhitelist.setOnClickListener((v) -> {
+            sqlite = new SQLite(requireContext());
             sqlite.setBoolSetting("channelWhitelist", !isChannelWhitelist);
+            sqlite.close();
             isChannelWhitelist = !isChannelWhitelist;
             Utils.showToast("Channels will now need to be " + (isChannelWhitelist ? "whitelisted" : "blacklisted"));
         });
@@ -58,7 +64,9 @@ public class PluginSettings extends BottomSheet {
                 .setIsDangerous(true)
                 .setDescription("Are you sure you want to clear all edited messages from the logs?");
             confirmDelete.setOnOkListener((v_) -> {
+                sqlite = new SQLite(requireContext());
                 sqlite.clearEditedMessages();
+                sqlite.close();
                 Utils.showToast("Cleared all edited messages from the database (restart required)");
                 confirmDelete.dismiss();
                 dismiss();
@@ -74,7 +82,9 @@ public class PluginSettings extends BottomSheet {
                 .setIsDangerous(true)
                 .setDescription("Are you sure you want to clear all deleted messages from the logs?");
             confirmDelete.setOnOkListener((v_) -> {
+                sqlite = new SQLite(requireContext());
                 sqlite.clearDeletedMessages();
+                sqlite.close();
                 Utils.showToast("Cleared all deleted messages from the database (restart required)");
                 confirmDelete.dismiss();
                 dismiss();
@@ -90,7 +100,9 @@ public class PluginSettings extends BottomSheet {
                 .setIsDangerous(true)
                 .setDescription("Are you sure you want to clear all " + (isWhitelist ? "whitelisted" : "blacklisted") + " guilds?");
             confirmDelete.setOnOkListener((v_) -> {
+                sqlite = new SQLite(requireContext());
                 sqlite.clearGuilds();
+                sqlite.close();
                 Utils.showToast("Cleared all " + (isWhitelist ? "whitelisted" : "blacklisted") + " guilds from the database (restart required)");
                 confirmDelete.dismiss();
                 dismiss();
@@ -106,7 +118,9 @@ public class PluginSettings extends BottomSheet {
                 .setIsDangerous(true)
                 .setDescription("Are you sure you want to clear all " + (isChannelWhitelist ? "whitelisted" : "blacklisted") + " channels?");
             confirmDelete.setOnOkListener((v_) -> {
+                sqlite = new SQLite(requireContext());
                 sqlite.clearChannels();
+                sqlite.close();
                 Utils.showToast("Cleared all " + (isChannelWhitelist ? "whitelisted" : "blacklisted") + " channels from the database (restart required)");
                 confirmDelete.dismiss();
                 dismiss();
