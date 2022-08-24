@@ -177,7 +177,6 @@ public final class MessageLogger extends Plugin {
                 var modal = (WidgetChannelsListItemChannelActions.Model) cf.args[0];
                 var channel = modal.getChannel();
                 SQLite sqlite = new SQLite(context);
-                Log.d("MessageLogger", channel.toString());
                 var channelId = channel.k();
                 var isWhitelisted = sqlite.isChannelWhitelisted(channelId);
                 var viewID = View.generateViewId();
