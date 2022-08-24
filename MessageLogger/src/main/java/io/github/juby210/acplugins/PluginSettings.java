@@ -2,6 +2,7 @@ package io.github.juby210.acplugins;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -12,6 +13,8 @@ import com.aliucord.views.Button;
 import com.aliucord.views.DangerButton;
 import com.aliucord.widgets.BottomSheet;
 import com.discord.views.CheckedSetting;
+
+import java.io.*;
 
 public class PluginSettings extends BottomSheet {
 
@@ -86,9 +89,25 @@ public class PluginSettings extends BottomSheet {
             Utils.showToast(logDeletes ? "Now logging deleted messages" : "No longer logging deleted messages");
         });
 
-        TextView danger = new TextView(context, null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Header);
-        danger.setText("Database");
-        danger.setGravity(Gravity.CENTER_HORIZONTAL);
+        TextView database = new TextView(context, null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Header);
+        database.setText("Database");
+        database.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        Button exportDatabase = new Button(context);
+        exportDatabase.setText("Export Database");
+        exportDatabase.setOnClickListener((v) -> {
+            sqlite = new SQLite(requireContext());
+            sqlite.exportDatabase();
+            sqlite.close();
+        });
+
+        Button importDatabase = new Button(context);
+        importDatabase.setText("Import Database");
+        importDatabase.setOnClickListener((v) -> {
+            sqlite = new SQLite(requireContext());
+            sqlite.importDatabase();
+            sqlite.close();
+        });
 
         DangerButton clearEditLogs = new DangerButton(context);
         clearEditLogs.setText("Clear Edit Logs");
@@ -168,7 +187,9 @@ public class PluginSettings extends BottomSheet {
         addView(channelWhitelist);
         addView(logEditsSwitch);
         addView(logDeletesSwitch);
-        addView(danger);
+        addView(database);
+        addView(exportDatabase);
+        addView(importDatabase);
         addView(clearEditLogs);
         addView(clearDeleteLogs);
         addView(clearGuilds);

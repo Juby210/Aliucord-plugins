@@ -4,8 +4,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 
+import com.aliucord.Utils;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
+
+import java.io.File;
+import java.io.IOException;
 
 import io.github.juby210.acplugins.messagelogger.MessageRecord;
 
@@ -215,6 +220,77 @@ public class SQLite extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME;
         return db.rawQuery(query, null);
+    }
+
+    public void importDatabase() {
+        String exported = Environment.getExternalStorageDirectory() + "/Aliucord/message_logger.db";
+        File exportedDB = new File(exported);
+        if (!exportedDB.exists()) {
+            Utils.showToast("Cannot import database from '" + exported + "' as it does not exist");
+            return;
+        }
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "ATTACH DATABASE ? AS exportdb";
+        db.execSQL(query, new Object[]{exported});
+        query = "INSERT INTO " + TABLE_NAME + " SELECT * FROM exportdb." + TABLE_NAME;
+        db.execSQL(query);
+        query = "INSERT INTO " + TABLE_NAME_EDITS + " SELECT * FROM exportdb." + TABLE_NAME_EDITS;
+        db.execSQL(query);
+        query = "INSERT INTO " + TABLE_NAME_GUILDS + " SELECT * FROM exportdb." + TABLE_NAME_GUILDS;
+        db.execSQL(query);
+        query = "INSERT INTO " + TABLE_NAME_CHANNELS + " SELECT * FROM exportdb." + TABLE_NAME_CHANNELS;
+        db.execSQL(query);
+        query = "INSERT INTO " + TABLE_NAME_SETTINGS + " SELECT * FROM exportdb." + TABLE_NAME_SETTINGS;
+        db.execSQL(query);
+        Utils.showToast("Successfully imported database");
+    }
+
+    public void exportDatabase() {
+        String exported = Environment.getExternalStorageDirectory() + "/Aliucord/message_logger.db";
+        try {
+            File exportedDB = new File(exported);
+            exportedDB.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "ATTACH DATABASE ? AS exportdb";
+        db.execSQL(query, new Object[]{exported});
+        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_EDITS);
+        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_GUILDS);
+        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_CHANNELS);
+        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_SETTINGS);
+        query = "CREATE TABLE exportdb." + TABLE_NAME + " (" +
+            "id LONG, " +
+            "delete_data, " +
+            "record TEXT)";
+        db.execSQL(query);
+        query = "CREATE TABLE exportdb." + TABLE_NAME_EDITS + " (" +
+            "id LONG, " +
+            "record TEXT)";
+        db.execSQL(query);
+        query = "CREATE TABLE exportdb." + TABLE_NAME_GUILDS + " (" +
+            "id LONG)";
+        db.execSQL(query);
+        query = "CREATE TABLE exportdb." + TABLE_NAME_CHANNELS + " (" +
+            "id LONG)";
+        db.execSQL(query);
+        query = "CREATE TABLE exportdb." + TABLE_NAME_SETTINGS + " (" +
+            "name TEXT, " +
+            "value TEXT)";
+        db.execSQL(query);
+        query = "INSERT INTO exportdb." + TABLE_NAME + " SELECT * FROM " + TABLE_NAME;
+        db.execSQL(query);
+        query = "INSERT INTO exportdb." + TABLE_NAME_EDITS + " SELECT * FROM " + TABLE_NAME_EDITS;
+        db.execSQL(query);
+        query = "INSERT INTO exportdb." + TABLE_NAME_GUILDS + " SELECT * FROM " + TABLE_NAME_GUILDS;
+        db.execSQL(query);
+        query = "INSERT INTO exportdb." + TABLE_NAME_CHANNELS + " SELECT * FROM " + TABLE_NAME_CHANNELS;
+        db.execSQL(query);
+        query = "INSERT INTO exportdb." + TABLE_NAME_SETTINGS + " SELECT * FROM " + TABLE_NAME_SETTINGS;
+        db.execSQL(query);
+        Utils.showToast("Successfully exported database to '" + exported + "'", true);
     }
 
     @Override
