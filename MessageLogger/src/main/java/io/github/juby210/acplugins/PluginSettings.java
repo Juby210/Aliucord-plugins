@@ -50,7 +50,7 @@ public class PluginSettings extends BottomSheet {
         logging.setGravity(Gravity.CENTER_HORIZONTAL);
 
         Button guildWhitelist = new Button(context);
-        guildWhitelist.setText("Toggle Whitelist / Blacklist For Guilds");
+        guildWhitelist.setText("Toggle Whitelist / Blacklist For Guilds (Current Is " + (isWhitelist ? "Whitelist" : "Blacklist") + ")");
         guildWhitelist.setOnClickListener((v) -> {
             sqlite = new SQLite(requireContext());
             sqlite.setBoolSetting("whitelist", !isWhitelist);
@@ -60,7 +60,7 @@ public class PluginSettings extends BottomSheet {
         });
 
         Button channelWhitelist = new Button(context);
-        channelWhitelist.setText("Toggle Whitelist / Blacklist For Channels");
+        channelWhitelist.setText("Toggle Whitelist / Blacklist For Channels (Current Is " + (isChannelWhitelist ? "Whitelist" : "Blacklist") + ")");
         channelWhitelist.setOnClickListener((v) -> {
             sqlite = new SQLite(requireContext());
             sqlite.setBoolSetting("channelWhitelist", !isChannelWhitelist);
