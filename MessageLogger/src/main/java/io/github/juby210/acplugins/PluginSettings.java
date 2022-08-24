@@ -57,6 +57,7 @@ public class PluginSettings extends BottomSheet {
             sqlite.close();
             isWhitelist = !isWhitelist;
             Utils.showToast("Guilds will now need to be " + (isWhitelist ? "whitelisted" : "blacklisted"));
+            dismiss();
         });
 
         Button channelWhitelist = new Button(context);
@@ -67,6 +68,7 @@ public class PluginSettings extends BottomSheet {
             sqlite.close();
             isChannelWhitelist = !isChannelWhitelist;
             Utils.showToast("Channels will now need to be " + (isChannelWhitelist ? "whitelisted" : "blacklisted"));
+            dismiss();
         });
 
         CheckedSetting logEditsSwitch = Utils.createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Edits", "Log edited messages to the database");
