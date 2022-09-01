@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Juby210
+ * Copyright (c) 2021-2022 Juby210
  * Licensed under the Open Software License version 3.0
  */
 
@@ -18,25 +18,17 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
-import com.aliucord.CollectionUtils;
-import com.aliucord.Logger;
-import com.aliucord.Utils;
+import com.aliucord.*;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.Hook;
 import com.aliucord.patcher.PreHook;
-import com.aliucord.utils.ReflectUtils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
-import com.discord.models.domain.ModelMessageDelete;
 import com.discord.models.message.Message;
-import com.discord.stores.StoreMessageState;
-import com.discord.stores.StoreMessagesHolder;
-import com.discord.stores.StoreStream;
-import com.discord.utilities.textprocessing.DiscordParser;
-import com.discord.utilities.textprocessing.MessagePreprocessor;
-import com.discord.utilities.textprocessing.MessageRenderContext;
+import com.discord.stores.*;
+import com.discord.utilities.textprocessing.*;
 import com.discord.utilities.textprocessing.node.EditedMessageNode;
 import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.time.TimeUtils;
@@ -53,20 +45,17 @@ import com.facebook.drawee.span.DraweeSpanStringBuilder;
 import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import io.github.juby210.acplugins.messagelogger.MessageRecord;
-import io.github.juby210.acplugins.messagelogger.ReAdder;
+import io.github.juby210.acplugins.messagelogger.*;
 import kotlin.jvm.functions.Function1;
 
 @AliucordPlugin
 @SuppressWarnings({ "unchecked", "CommentedOutCode" })
 public final class MessageLogger extends Plugin {
+    public MessageLogger() {
+        settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET);
+    }
 
     public static WidgetChatList chatList;
     public final Map<Long, Message> cachedMessages = new HashMap<>();
@@ -79,8 +68,6 @@ public final class MessageLogger extends Plugin {
     @Override
     public void start(Context context) throws Throwable {
         this.context = context;
-
-        settingsTab = new SettingsTab(PluginSettings.class, SettingsTab.Type.BOTTOM_SHEET);
 
         deletedMessagesRecord.clear();
         messageRecord.clear();
@@ -134,16 +121,17 @@ public final class MessageLogger extends Plugin {
         patcher.unpatchAll();
     }
 
-    // Requires app to be restarted after removing from log
     private void patchWidgetChatListActions() throws Throwable {
         patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
             new Hook((cf) -> {
                 var modal = (WidgetChatListActions.Model) cf.args[0];
                 var message = modal.getMessage();
-                SQLite sqlite = new SQLite(context);
+                var sqlite = new SQLite(context);
                 var messageId = message.getId();
                 var isDeleted = sqlite.isMessageDeleted(messageId);
-                if (isDeleted || sqlite.isMessageEdited(messageId)) {
+                var isEdited = sqlite.isMessageEdited(messageId);
+                sqlite.close();
+                if (isDeleted || isEdited) {
                     var viewID = View.generateViewId();
                     var hideIcon = ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
                     var actions = (WidgetChatListActions) cf.thisObject;
@@ -156,12 +144,14 @@ public final class MessageLogger extends Plugin {
                         tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
                         lay.addView(tw, lay.getChildCount());
                         tw.setOnClickListener((v) -> {
+                            var db = new SQLite(context);
                             if (isDeleted) {
-                                sqlite.removeDeletedMessage(messageId);
-                            } else {
-                                sqlite.removeEditedMessage(messageId);
+                                db.removeDeletedMessage(messageId);
                             }
-                            sqlite.close();
+                            if (isEdited) {
+                                db.removeEditedMessage(messageId);
+                            }
+                            db.close();
                             Utils.showToast("Removed From Logs");
                             ((WidgetChatListActions) cf.thisObject).dismiss();
                         });
@@ -176,9 +166,9 @@ public final class MessageLogger extends Plugin {
             new Hook((cf) -> {
                 var modal = (WidgetChannelsListItemChannelActions.Model) cf.args[0];
                 var channel = modal.getChannel();
-                SQLite sqlite = new SQLite(context);
-                var channelId = channel.k();
-                var isWhitelisted = sqlite.isChannelWhitelisted(channelId);
+                var sqlite = new SQLite(context);
+                var isWhitelisted = sqlite.isChannelWhitelisted(channel);
+                sqlite.close();
                 var viewID = View.generateViewId();
                 var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
                 var actions = (WidgetChannelsListItemChannelActions) cf.thisObject;
@@ -191,12 +181,14 @@ public final class MessageLogger extends Plugin {
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
+                        var db = new SQLite(context);
+                        var channelId = ChannelWrapper.getId(channel);
                         if (isWhitelisted) {
-                            sqlite.removeChannelFromWhitelist(channelId);
+                            db.removeChannelFromWhitelist(channelId);
                         } else {
-                            sqlite.addChannelToWhitelist(channelId);
+                            db.addChannelToWhitelist(channelId);
                         }
-                        sqlite.close();
+                        db.close();
                         ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
                     });
                 }
@@ -205,22 +197,23 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetGuildContextMenu() throws Throwable {
+        var getBinding = WidgetGuildContextMenu.class.getDeclaredMethod("getBinding");
+        getBinding.setAccessible(true);
         patcher.patch(WidgetGuildContextMenu.class.getDeclaredMethod("configureUI", GuildContextMenuViewModel.ViewState.class),
             new Hook((cf) -> {
                 var state = (GuildContextMenuViewModel.ViewState.Valid) cf.args[0];
-                Method method = null;
                 WidgetGuildContextMenuBinding binding = null;
                 try {
-                    method = ReflectUtils.getMethodByArgs(WidgetGuildContextMenu.class, "getBinding");
-                    binding = (WidgetGuildContextMenuBinding) method.invoke(cf.thisObject);
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    binding = (WidgetGuildContextMenuBinding) getBinding.invoke(cf.thisObject);
+                } catch (Throwable e) {
+                    logger.error("Failed to get binding", e);
                 }
                 LinearLayout lay = (LinearLayout) binding.e.getParent();
                 var guild = state.getGuild();
                 SQLite sqlite = new SQLite(context);
                 var guildId = guild.getId();
                 var isWhitelisted = sqlite.isGuildWhitelisted(guildId);
+                sqlite.close();
                 var viewID = View.generateViewId();
                 var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
                 if (lay.findViewById(viewID) == null) {
@@ -230,12 +223,13 @@ public final class MessageLogger extends Plugin {
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
+                        var db = new SQLite(context);
                         if (isWhitelisted) {
-                            sqlite.removeGuildFromWhitelist(guildId);
+                            db.removeGuildFromWhitelist(guildId);
                         } else {
-                            sqlite.addGuildToWhitelist(guildId);
+                            db.addGuildToWhitelist(guildId);
                         }
-                        sqlite.close();
+                        db.close();
                         lay.setVisibility(View.GONE);
                     });
                 }
@@ -246,41 +240,42 @@ public final class MessageLogger extends Plugin {
     private void patchAddMessages() {
         patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
             var messages = (List<Message>) param.args[0];
+            var sqlite = new SQLite(context);
             for (var message : messages) {
-                SQLite sqlite = new SQLite(context);
                 var channel = StoreStream.getChannels().getChannel(message.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
                 if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) continue;
-                if (!sqlite.isChannelWhitelisted(message.getChannelId())) continue;
-                sqlite.close();
+                if (!sqlite.isChannelWhitelisted(channel)) continue;
                 updateCached(message.getId(), message);
             }
+            sqlite.close();
         }));
     }
 
     private void patchDeleteMessages() {
         patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
+            var sqlite = new SQLite(context);
+            if (!sqlite.getBoolSetting("logDeletes", true)) {
+                sqlite.close();
+                return;
+            }
             var channelId = (long) param.args[0];
+            var channel = StoreStream.getChannels().getChannel(channelId);
+            if (!sqlite.isChannelWhitelisted(channel)) {
+                sqlite.close();
+                return;
+            }
+            var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
+            if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
+                sqlite.close();
+                return;
+            }
+
             var newDeleted = (List<Long>) param.args[1];
             var updateMessages = StoreStream.getChannelsSelected().getId() == channelId;
             for (var id : newDeleted) {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
-                SQLite sqlite = new SQLite(context);
-                if (!sqlite.getBoolSetting("logDeletes", true)) {
-                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
-                    continue;
-                }
-                var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
-                var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
-                if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
-                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
-                    continue;
-                }
-                if (!sqlite.isChannelWhitelisted(msg.getChannelId())) {
-                    StoreStream.getMessages().handleMessageDelete(new ModelMessageDelete(channelId, id));
-                    continue;
-                }
                 // User author;
                 // if (!selfDelete && (author = msg.getAuthor()) != null && new CoreUser(author).getId() == StoreStream.getUsers().getMe().getId()) selfDelete = true;
                 var channelDeletes = deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
@@ -288,23 +283,18 @@ public final class MessageLogger extends Plugin {
                 var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
                 record.message = msg;
                 record.deleteData = new MessageRecord.DeleteData(System.currentTimeMillis());
-                if (updateMessages && chatList != null) {
-                    var adapter = WidgetChatList.access$getAdapter$p(chatList);
-                    var data = adapter.getInternalData();
-                    var i = CollectionUtils.findIndex(data, e -> e instanceof MessageEntry && ((MessageEntry) e).getMessage().getId() == msg.getId());
-                    if (i != -1) adapter.notifyItemChanged(i);
-                    Cursor editHistory = sqlite.getAllMessageEdits(msg.getId());
-                    if (editHistory.moveToFirst()) {
-                        do {
-                            var editedMessage = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(editHistory.getString(1))), MessageRecord.class);
-                            record.editHistory = editedMessage.editHistory;
-                        } while (editHistory.moveToNext());
-                    }
-                    sqlite.addNewMessage(record);
-                    sqlite.close();
+                Cursor editHistory = sqlite.getAllMessageEdits(msg.getId());
+                if (editHistory.moveToFirst()) {
+                    do {
+                        var editedMessage = InboundGatewayGsonParser.fromJson(new JsonReader(new StringReader(editHistory.getString(1))), MessageRecord.class);
+                        record.editHistory = editedMessage.editHistory;
+                    } while (editHistory.moveToNext());
                 }
+                sqlite.addNewMessage(record);
+                if (updateMessages) updateMessages(id);
             }
 
+            sqlite.close();
             param.setResult(null);
         }));
     }
@@ -328,7 +318,7 @@ public final class MessageLogger extends Plugin {
                     origMsg != null &&
                         (content = origMsg.getContent()) != null &&
                         !content.equals(msg.getContent()) &&
-                        sqlite.isChannelWhitelisted(channelId) &&
+                        sqlite.isChannelWhitelisted(channel) &&
                         sqlite.getBoolSetting("logEdits", true)
                 ) {
                     if (guildId == 0 || sqlite.isGuildWhitelisted(guildId)) {
@@ -426,6 +416,15 @@ public final class MessageLogger extends Plugin {
                 textView.setDraweeSpanStringBuilder(builder);
             } catch (Throwable e) {logger.error(e);}
         }));
+    }
+
+    private void updateMessages(long id) {
+        if (chatList != null) {
+            var adapter = WidgetChatList.access$getAdapter$p(chatList);
+            var data = adapter.getInternalData();
+            var i = CollectionUtils.findIndex(data, e -> e instanceof MessageEntry && ((MessageEntry) e).getMessage().getId() == id);
+            if (i != -1) adapter.notifyItemChanged(i);
+        }
     }
 
     // cache
