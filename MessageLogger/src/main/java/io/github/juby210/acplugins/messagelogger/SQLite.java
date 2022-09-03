@@ -15,8 +15,6 @@ import com.aliucord.Utils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.discord.api.channel.Channel;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
-import com.discord.models.domain.ModelNotificationSettings;
-import com.discord.stores.StoreStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,10 +138,7 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public Boolean isGuildWhitelisted(long id) {
-        if (getBoolSetting("ignoreMutedServers", true)) {
-            var settings = StoreStream.getUserGuildSettings().getGuildSettings().get(id);
-            if (settings != null && settings.isMuted()) return false;
-        }
+        if (getBoolSetting("ignoreMutedServers", true) && UtilsKt.isGuildMuted(id)) return false;
         SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
@@ -152,12 +147,7 @@ public final class SQLite extends SQLiteOpenHelper {
 
     public Boolean isChannelWhitelisted(Channel channel) {
         var id = ChannelWrapper.getId(channel);
-        if (getBoolSetting("ignoreMutedChannels", true)) {
-            var guildId = ChannelWrapper.getGuildId(channel);
-            var settings = StoreStream.getUserGuildSettings().getGuildSettings().get(guildId);
-            ModelNotificationSettings.ChannelOverride channelOverride;
-            if (settings != null && (channelOverride = settings.getChannelOverride(id)) != null && channelOverride.isMuted()) return false;
-        }
+        if (getBoolSetting("ignoreMutedChannels", true) && UtilsKt.isChannelMuted(ChannelWrapper.getGuildId(channel), id)) return false;
         SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});

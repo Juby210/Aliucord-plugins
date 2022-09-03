@@ -5,6 +5,7 @@
 
 package io.github.juby210.acplugins;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.SpannableStringBuilder;
@@ -15,7 +16,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.*;
@@ -28,6 +28,7 @@ import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
 import com.discord.models.message.Message;
 import com.discord.stores.*;
+import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.textprocessing.*;
 import com.discord.utilities.textprocessing.node.EditedMessageNode;
 import com.discord.utilities.time.ClockFactory;
@@ -51,6 +52,7 @@ import io.github.juby210.acplugins.messagelogger.*;
 import kotlin.jvm.functions.Function1;
 
 @AliucordPlugin
+@SuppressLint("UseCompatLoadingForDrawables")
 @SuppressWarnings({ "unchecked", "CommentedOutCode" })
 public final class MessageLogger extends Plugin {
     public MessageLogger() {
@@ -122,6 +124,8 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetChatListActions() throws Throwable {
+        var hideIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+
         patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
             new Hook((cf) -> {
                 var modal = (WidgetChatListActions.Model) cf.args[0];
@@ -133,7 +137,6 @@ public final class MessageLogger extends Plugin {
                 sqlite.close();
                 if (isDeleted || isEdited) {
                     var viewID = View.generateViewId();
-                    var hideIcon = ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
                     var actions = (WidgetChatListActions) cf.thisObject;
                     var scrollView = (NestedScrollView) actions.getView();
                     var lay = (LinearLayout) scrollView.getChildAt(0);
@@ -141,6 +144,7 @@ public final class MessageLogger extends Plugin {
                         TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
                         tw.setId(viewID);
                         tw.setText(isDeleted ? "Remove Deleted Message" : "Remove Edit History");
+                        hideIcon.setTint(ColorCompat.getThemedColor(tw, com.lytefast.flexinput.R.b.colorInteractiveNormal));
                         tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
                         lay.addView(tw, lay.getChildCount());
                         tw.setOnClickListener((v) -> {
@@ -162,15 +166,23 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetChannelsListItemChannelActions() throws Throwable {
+        var whitelistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+        var blacklistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+
         patcher.patch(WidgetChannelsListItemChannelActions.class.getDeclaredMethod("configureUI", WidgetChannelsListItemChannelActions.Model.class),
             new Hook((cf) -> {
                 var modal = (WidgetChannelsListItemChannelActions.Model) cf.args[0];
                 var channel = modal.getChannel();
+                var channelId = ChannelWrapper.getId(channel);
                 var sqlite = new SQLite(context);
+                if (sqlite.getBoolSetting("ignoreMutedChannels", true) && UtilsKt.isChannelMuted(ChannelWrapper.getGuildId(channel), channelId)) {
+                    sqlite.close();
+                    return;
+                }
                 var isWhitelisted = sqlite.isChannelWhitelisted(channel);
                 sqlite.close();
                 var viewID = View.generateViewId();
-                var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+                var icon = isWhitelisted ? whitelistedIcon : blacklistedIcon;
                 var actions = (WidgetChannelsListItemChannelActions) cf.thisObject;
                 var scrollView = (NestedScrollView) actions.getView();
                 var lay = (LinearLayout) scrollView.getChildAt(0);
@@ -178,11 +190,11 @@ public final class MessageLogger extends Plugin {
                     TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.UiKit_Settings_Item_Icon);
                     tw.setId(viewID);
                     tw.setText(isWhitelisted ? "Disable Logging" : "Enable Logging");
+                    icon.setTint(ColorCompat.getThemedColor(tw, com.lytefast.flexinput.R.b.colorInteractiveNormal));
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
                         var db = new SQLite(context);
-                        var channelId = ChannelWrapper.getId(channel);
                         if (isWhitelisted) {
                             db.removeChannelFromWhitelist(channelId);
                         } else {
@@ -197,6 +209,9 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetGuildContextMenu() throws Throwable {
+        var whitelistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+        var blacklistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+
         var getBinding = WidgetGuildContextMenu.class.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
         patcher.patch(WidgetGuildContextMenu.class.getDeclaredMethod("configureUI", GuildContextMenuViewModel.ViewState.class),
@@ -208,18 +223,23 @@ public final class MessageLogger extends Plugin {
                 } catch (Throwable e) {
                     logger.error("Failed to get binding", e);
                 }
-                LinearLayout lay = (LinearLayout) binding.e.getParent();
+                var lay = (LinearLayout) binding.e.getParent();
                 var guild = state.getGuild();
-                SQLite sqlite = new SQLite(context);
+                var sqlite = new SQLite(context);
                 var guildId = guild.getId();
+                if (sqlite.getBoolSetting("ignoreMutedServers", true) && UtilsKt.isGuildMuted(guildId)) {
+                    sqlite.close();
+                    return;
+                }
                 var isWhitelisted = sqlite.isGuildWhitelisted(guildId);
                 sqlite.close();
                 var viewID = View.generateViewId();
-                var icon = isWhitelisted ? ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate() : ContextCompat.getDrawable(context, com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
+                var icon = isWhitelisted ? whitelistedIcon : blacklistedIcon;
                 if (lay.findViewById(viewID) == null) {
                     TextView tw = new TextView(lay.getContext(), null, 0, com.lytefast.flexinput.R.i.ContextMenuTextOption);
                     tw.setId(viewID);
                     tw.setText(isWhitelisted ? "Disable Logging" : "Enable Logging");
+                    icon.setTint(ColorCompat.getThemedColor(tw, com.lytefast.flexinput.R.b.colorInteractiveNormal));
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
@@ -290,7 +310,7 @@ public final class MessageLogger extends Plugin {
                         record.editHistory = editedMessage.editHistory;
                     } while (editHistory.moveToNext());
                 }
-                sqlite.addNewMessage(record);
+                if (sqlite.getBoolSetting("saveLogs", true)) sqlite.addNewMessage(record);
                 if (updateMessages) updateMessages(id);
             }
 
@@ -327,7 +347,7 @@ public final class MessageLogger extends Plugin {
                         var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
                         record.message = msg;
                         record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
-                        sqlite.addNewMessageEdit(record);
+                        if (sqlite.getBoolSetting("saveLogs", true)) sqlite.addNewMessageEdit(record);
                     }
                 }
                 sqlite.close();

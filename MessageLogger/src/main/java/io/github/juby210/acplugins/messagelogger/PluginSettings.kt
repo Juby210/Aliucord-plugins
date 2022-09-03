@@ -26,6 +26,7 @@ class PluginSettings : BottomSheet() {
     private var ignoreMutedChannels = false
     private var logEdits = false
     private var logDeletes = false
+    private var saveLogs = false
 
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, bundle: Bundle?) {
@@ -39,6 +40,7 @@ class PluginSettings : BottomSheet() {
             ignoreMutedChannels = getBoolSetting("ignoreMutedChannels", true)
             logEdits = getBoolSetting("logEdits", true)
             logDeletes = getBoolSetting("logDeletes", true)
+            saveLogs = getBoolSetting("saveLogs", true)
             close()
         }
 
@@ -103,7 +105,7 @@ class PluginSettings : BottomSheet() {
             }
         })
 
-        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Edits", "Log edited messages to the database").apply {
+        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Edits", "Log edited messages").apply {
             isChecked = logEdits
             setOnCheckedListener {
                 logEdits = !logEdits
@@ -115,7 +117,7 @@ class PluginSettings : BottomSheet() {
             }
         })
 
-        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Deletes", "Log deleted messages to the database").apply {
+        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Deletes", "Log deleted messages").apply {
             isChecked = logDeletes
             setOnCheckedListener {
                 logEdits = !logDeletes
@@ -124,6 +126,18 @@ class PluginSettings : BottomSheet() {
                     close()
                 }
                 showToast(if (logDeletes) "Now logging deleted messages" else "No longer logging deleted messages")
+            }
+        })
+
+        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Save Logs", "Save logs to the database").apply {
+            isChecked = saveLogs
+            setOnCheckedListener {
+                saveLogs = !saveLogs
+                with(SQLite(context)) {
+                    setBoolSetting("saveLogs", saveLogs)
+                    close()
+                }
+                showToast("Logs will be now " + (if (saveLogs) "" else "not ") + "saved")
             }
         })
 
