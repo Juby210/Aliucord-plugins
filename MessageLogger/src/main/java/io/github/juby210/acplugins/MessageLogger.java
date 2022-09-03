@@ -264,8 +264,10 @@ public final class MessageLogger extends Plugin {
             for (var message : messages) {
                 var channel = StoreStream.getChannels().getChannel(message.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
-                if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) continue;
-                if (!sqlite.isChannelWhitelisted(channel)) continue;
+                if (!sqlite.getBoolSetting("alwaysLogSelected", true) || StoreStream.getGuildSelected().getSelectedGuildId() != guildId) {
+                    if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) continue;
+                    if (!sqlite.isChannelWhitelisted(channel)) continue;
+                }
                 updateCached(message.getId(), message);
             }
             sqlite.close();
@@ -281,14 +283,12 @@ public final class MessageLogger extends Plugin {
             }
             var channelId = (long) param.args[0];
             var channel = StoreStream.getChannels().getChannel(channelId);
-            if (!sqlite.isChannelWhitelisted(channel)) {
-                sqlite.close();
-                return;
-            }
             var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
-            if (guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
-                sqlite.close();
-                return;
+            if (!sqlite.getBoolSetting("alwaysLogSelected", true) || StoreStream.getGuildSelected().getSelectedGuildId() != guildId) {
+                if (!sqlite.isChannelWhitelisted(channel) || guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
+                    sqlite.close();
+                    return;
+                }
             }
 
             var newDeleted = (List<Long>) param.args[1];
@@ -329,25 +329,24 @@ public final class MessageLogger extends Plugin {
                 var channelId = msg.getChannelId();
                 var origMsg = getCachedMessage(channelId, id);
 
-                SQLite sqlite = new SQLite(context);
-                var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
-                var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
-
-                String content;
-                if (
-                    origMsg != null &&
-                        (content = origMsg.getContent()) != null &&
-                        !content.equals(msg.getContent()) &&
-                        sqlite.isChannelWhitelisted(channel) &&
-                        sqlite.getBoolSetting("logEdits", true)
-                ) {
-                    if (guildId == 0 || sqlite.isGuildWhitelisted(guildId)) {
-                        var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
-                        channelEdits.add(id);
-                        var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
-                        record.message = msg;
-                        record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
-                        if (sqlite.getBoolSetting("saveLogs", true)) sqlite.addNewMessageEdit(record);
+                var sqlite = new SQLite(context);
+                if (sqlite.getBoolSetting("logEdits", true)) {
+                    var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
+                    var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
+                    if (
+                        (sqlite.getBoolSetting("alwaysLogSelected", true) &&
+                            StoreStream.getGuildSelected().getSelectedGuildId() == guildId) ||
+                            (sqlite.isChannelWhitelisted(channel) && (guildId == 0 || sqlite.isGuildWhitelisted(guildId)))
+                    ) {
+                        String content;
+                        if (origMsg != null && (content = origMsg.getContent()) != null && !content.equals(msg.getContent())) {
+                            var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
+                            channelEdits.add(id);
+                            var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
+                            record.message = msg;
+                            record.editHistory.add(new MessageRecord.EditHistory(content, System.currentTimeMillis()));
+                            if (sqlite.getBoolSetting("saveLogs", true)) sqlite.addNewMessageEdit(record);
+                        }
                     }
                 }
                 sqlite.close();

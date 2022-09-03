@@ -24,6 +24,7 @@ class PluginSettings : BottomSheet() {
     private var ignoreMutedServers = false
     private var isChannelWhitelist = false
     private var ignoreMutedChannels = false
+    private var alwaysLogSelected = false
     private var logEdits = false
     private var logDeletes = false
     private var saveLogs = false
@@ -38,6 +39,7 @@ class PluginSettings : BottomSheet() {
             ignoreMutedServers = getBoolSetting("ignoreMutedServers", true)
             isChannelWhitelist = getBoolSetting("channelWhitelist", false)
             ignoreMutedChannels = getBoolSetting("ignoreMutedChannels", true)
+            alwaysLogSelected = getBoolSetting("alwaysLogSelected", true)
             logEdits = getBoolSetting("logEdits", true)
             logDeletes = getBoolSetting("logDeletes", true)
             saveLogs = getBoolSetting("saveLogs", true)
@@ -102,6 +104,17 @@ class PluginSettings : BottomSheet() {
                     close()
                 }
                 showToast("Muted channels will now be " + (if (ignoreMutedChannels) "" else "not ") + "ignored")
+            }
+        })
+
+        addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Always Log Selected", "Always log selected server regardless of whitelist/blacklist").apply {
+            isChecked = alwaysLogSelected
+            setOnCheckedListener {
+                alwaysLogSelected = !alwaysLogSelected
+                with(SQLite(context)) {
+                    setBoolSetting("alwaysLogSelected", alwaysLogSelected)
+                    close()
+                }
             }
         })
 
