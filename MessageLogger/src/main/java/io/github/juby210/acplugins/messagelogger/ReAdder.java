@@ -63,7 +63,7 @@ public final class ReAdder {
         reAddIDs.sort(comparator);
         if (!(messages instanceof ArrayList)) messages = new ArrayList<>(messages);
         var len = reAddIDs.size();
-        for (var i = 0; i < len; i++) {
+        for (var i = 0; i < len - savedIDs.size(); i++) {
             var id = reAddIDs.get(i);
             if (!CollectionUtils.some(messages, m -> m.getId() == id)) //noinspection ConstantConditions
                 messages.add(i, messageRecord.get(id).message);
