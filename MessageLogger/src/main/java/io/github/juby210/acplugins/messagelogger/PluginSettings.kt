@@ -133,7 +133,7 @@ class PluginSettings : BottomSheet() {
         addView(createCheckedSetting(context, CheckedSetting.ViewType.SWITCH, "Log Deletes", "Log deleted messages").apply {
             isChecked = logDeletes
             setOnCheckedListener {
-                logDeletes = !logDeletes
+                logEdits = !logDeletes
                 with(SQLite(context)) {
                     setBoolSetting("logDeletes", logDeletes)
                     close()
