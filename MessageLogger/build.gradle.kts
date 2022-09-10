@@ -1,7 +1,12 @@
-version = "1.0.0"
+version = "1.0.1"
 description = "Saves deleted / edited messages to a SQLite database and restores them when the channel is opened."
 
 aliucord.changelog.set("""
+    1.0.1
+    =====================
+
+    * Fixed some new conversations not showing when logging messages to the database
+
     1.0.0
     ======================
 
