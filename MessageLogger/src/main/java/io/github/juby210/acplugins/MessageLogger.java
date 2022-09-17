@@ -65,16 +65,13 @@ public final class MessageLogger extends Plugin {
     public final Map<Long, List<Long>> editedMessagesRecord = new HashMap<>();
     public final Map<Long, MessageRecord> messageRecord = new HashMap<>();
     private final Logger logger = new Logger("MessageLogger");
-    private Context context;
+    private final SQLite sqlite = new SQLite(Utils.getAppContext());
 
     @Override
     public void start(Context context) throws Throwable {
-        this.context = context;
-
         deletedMessagesRecord.clear();
         messageRecord.clear();
         editedMessagesRecord.clear();
-        SQLite sqlite = new SQLite(context);
         Cursor deletedMessages = sqlite.getAllDeletedMessages();
         if (deletedMessages.moveToFirst() && deletedMessages.getCount() > 0) {
             do {
@@ -104,7 +101,6 @@ public final class MessageLogger extends Plugin {
             } while (editedMessages.moveToNext());
         }
         editedMessages.close();
-        sqlite.close();
         new ReAdder(this, patcher);
 
         patcher.patch(WidgetChatList.class.getDeclaredConstructor(), new Hook(param -> chatList = (WidgetChatList) param.thisObject));
@@ -121,20 +117,19 @@ public final class MessageLogger extends Plugin {
     @Override
     public void stop(Context context) {
         patcher.unpatchAll();
+        sqlite.close();
     }
 
     private void patchWidgetChatListActions() throws Throwable {
-        var hideIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
+        var hideIcon = Utils.getAppContext().getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
 
         patcher.patch(WidgetChatListActions.class.getDeclaredMethod("configureUI", WidgetChatListActions.Model.class),
             new Hook((cf) -> {
                 var modal = (WidgetChatListActions.Model) cf.args[0];
                 var message = modal.getMessage();
-                var sqlite = new SQLite(context);
                 var messageId = message.getId();
                 var isDeleted = sqlite.isMessageDeleted(messageId);
                 var isEdited = sqlite.isMessageEdited(messageId);
-                sqlite.close();
                 if (isDeleted || isEdited) {
                     var viewID = View.generateViewId();
                     var actions = (WidgetChatListActions) cf.thisObject;
@@ -148,14 +143,12 @@ public final class MessageLogger extends Plugin {
                         tw.setCompoundDrawablesRelativeWithIntrinsicBounds(hideIcon, null, null, null);
                         lay.addView(tw, lay.getChildCount());
                         tw.setOnClickListener((v) -> {
-                            var db = new SQLite(context);
                             if (isDeleted) {
-                                db.removeDeletedMessage(messageId);
+                                sqlite.removeDeletedMessage(messageId);
                             }
                             if (isEdited) {
-                                db.removeEditedMessage(messageId);
+                                sqlite.removeEditedMessage(messageId);
                             }
-                            db.close();
                             Utils.showToast("Removed From Logs");
                             ((WidgetChatListActions) cf.thisObject).dismiss();
                         });
@@ -166,6 +159,7 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetChannelsListItemChannelActions() throws Throwable {
+        var context = Utils.getAppContext();
         var whitelistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
         var blacklistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
 
@@ -174,13 +168,10 @@ public final class MessageLogger extends Plugin {
                 var modal = (WidgetChannelsListItemChannelActions.Model) cf.args[0];
                 var channel = modal.getChannel();
                 var channelId = ChannelWrapper.getId(channel);
-                var sqlite = new SQLite(context);
                 if (sqlite.getBoolSetting("ignoreMutedChannels", true) && UtilsKt.isChannelMuted(ChannelWrapper.getGuildId(channel), channelId)) {
-                    sqlite.close();
                     return;
                 }
                 var isWhitelisted = sqlite.isChannelWhitelisted(channel);
-                sqlite.close();
                 var viewID = View.generateViewId();
                 var icon = isWhitelisted ? whitelistedIcon : blacklistedIcon;
                 var actions = (WidgetChannelsListItemChannelActions) cf.thisObject;
@@ -194,13 +185,11 @@ public final class MessageLogger extends Plugin {
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
-                        var db = new SQLite(context);
                         if (isWhitelisted) {
-                            db.removeChannelFromWhitelist(channelId);
+                            sqlite.removeChannelFromWhitelist(channelId);
                         } else {
-                            db.addChannelToWhitelist(channelId);
+                            sqlite.addChannelToWhitelist(channelId);
                         }
-                        db.close();
                         ((WidgetChannelsListItemChannelActions) cf.thisObject).dismiss();
                     });
                 }
@@ -209,6 +198,7 @@ public final class MessageLogger extends Plugin {
     }
 
     private void patchWidgetGuildContextMenu() throws Throwable {
+        var context = Utils.getAppContext();
         var whitelistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
         var blacklistedIcon = context.getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility).mutate();
 
@@ -225,14 +215,11 @@ public final class MessageLogger extends Plugin {
                 }
                 var lay = (LinearLayout) binding.e.getParent();
                 var guild = state.getGuild();
-                var sqlite = new SQLite(context);
                 var guildId = guild.getId();
                 if (sqlite.getBoolSetting("ignoreMutedServers", true) && UtilsKt.isGuildMuted(guildId)) {
-                    sqlite.close();
                     return;
                 }
                 var isWhitelisted = sqlite.isGuildWhitelisted(guildId);
-                sqlite.close();
                 var viewID = View.generateViewId();
                 var icon = isWhitelisted ? whitelistedIcon : blacklistedIcon;
                 if (lay.findViewById(viewID) == null) {
@@ -243,13 +230,11 @@ public final class MessageLogger extends Plugin {
                     tw.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     lay.addView(tw, lay.getChildCount());
                     tw.setOnClickListener((v) -> {
-                        var db = new SQLite(context);
                         if (isWhitelisted) {
-                            db.removeGuildFromWhitelist(guildId);
+                            sqlite.removeGuildFromWhitelist(guildId);
                         } else {
-                            db.addGuildToWhitelist(guildId);
+                            sqlite.addGuildToWhitelist(guildId);
                         }
-                        db.close();
                         lay.setVisibility(View.GONE);
                     });
                 }
@@ -260,7 +245,6 @@ public final class MessageLogger extends Plugin {
     private void patchAddMessages() {
         patcher.patch(StoreMessagesHolder.class, "addMessages", new Class<?>[]{ List.class }, new Hook(param -> {
             var messages = (List<Message>) param.args[0];
-            var sqlite = new SQLite(context);
             for (var message : messages) {
                 var channel = StoreStream.getChannels().getChannel(message.getChannelId());
                 var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
@@ -270,15 +254,12 @@ public final class MessageLogger extends Plugin {
                 }
                 updateCached(message.getId(), message);
             }
-            sqlite.close();
         }));
     }
 
     private void patchDeleteMessages() {
         patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
-            var sqlite = new SQLite(context);
             if (!sqlite.getBoolSetting("logDeletes", true)) {
-                sqlite.close();
                 return;
             }
             var channelId = (long) param.args[0];
@@ -286,7 +267,6 @@ public final class MessageLogger extends Plugin {
             var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
             if (!sqlite.getBoolSetting("alwaysLogSelected", true) || StoreStream.getGuildSelected().getSelectedGuildId() != guildId) {
                 if (!sqlite.isChannelWhitelisted(channel) || guildId != 0 && !sqlite.isGuildWhitelisted(guildId)) {
-                    sqlite.close();
                     return;
                 }
             }
@@ -314,7 +294,6 @@ public final class MessageLogger extends Plugin {
                 if (updateMessages) updateMessages(id);
             }
 
-            sqlite.close();
             param.setResult(null);
         }));
     }
@@ -329,7 +308,6 @@ public final class MessageLogger extends Plugin {
                 var channelId = msg.getChannelId();
                 var origMsg = getCachedMessage(channelId, id);
 
-                var sqlite = new SQLite(context);
                 if (sqlite.getBoolSetting("logEdits", true)) {
                     var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
                     var guildId = channel != null ? ChannelWrapper.getGuildId(channel) : 0;
@@ -349,7 +327,6 @@ public final class MessageLogger extends Plugin {
                         }
                     }
                 }
-                sqlite.close();
             }
 
             updateCached(id, msg);

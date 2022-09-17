@@ -31,8 +31,11 @@ public final class SQLite extends SQLiteOpenHelper {
     private static final String TABLE_NAME_CHANNELS = "channels";
     private static final String TABLE_NAME_SETTINGS = "settings";
 
+    private final SQLiteDatabase db;
+
     public SQLite(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        db = getWritableDatabase();
     }
 
     @Override
@@ -59,7 +62,6 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void addNewMessage(MessageRecord record) {
-        SQLiteDatabase db = getWritableDatabase();
         String recordJson = InboundGatewayGsonParser.toJson(record);
         String deleteDataJson = InboundGatewayGsonParser.toJson(record.deleteData);
         String query = "INSERT INTO " + TABLE_NAME + " (id, delete_data, record) VALUES (?, ?, ?)";
@@ -67,95 +69,82 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void addNewMessageEdit(MessageRecord record) {
-        SQLiteDatabase db = getWritableDatabase();
         String recordJson = InboundGatewayGsonParser.toJson(record);
-        String query = "SELECT * FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(record.message.getId())});
-        if (cursor.getCount() > 0) {
-            query = "UPDATE " + TABLE_NAME_EDITS + " SET record = ? WHERE id = ?";
-            db.execSQL(query, new Object[]{recordJson, record.message.getId()});
-        } else {
-            query = "INSERT INTO " + TABLE_NAME_EDITS + " (id, record) VALUES (?, ?)";
-            db.execSQL(query, new Object[]{record.message.getId(),recordJson});
+        String query = "UPDATE " + TABLE_NAME_EDITS + " SET record = ? WHERE id = ?";
+        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(record.message.getId()) })) {
+            if (cursor.getCount() == 0) {
+                query = "INSERT INTO " + TABLE_NAME_EDITS + " (id, record) VALUES (?, ?)";
+                db.execSQL(query, new Object[]{ record.message.getId(), recordJson });
+            }
         }
     }
 
     public void removeDeletedMessage(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
         db.execSQL(query, new Object[]{id});
     }
 
     public void removeEditedMessage(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
         db.execSQL(query, new Object[]{id});
     }
 
     public void clearEditedMessages() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME_EDITS;
         db.execSQL(query);
     }
 
     public void clearDeletedMessages() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME;
         db.execSQL(query);
     }
 
     public void clearGuilds() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME_GUILDS;
         db.execSQL(query);
     }
 
     public void clearChannels() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "DELETE FROM " + TABLE_NAME_CHANNELS;
         db.execSQL(query);
     }
 
     public void setBoolSetting(String key, Boolean value) {
-        SQLiteDatabase db = getWritableDatabase();
-        String query = "SELECT * FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{key});
-        if (cursor.getCount() == 0) {
-            query = "INSERT INTO " + TABLE_NAME_SETTINGS + " (name, value) VALUES (?, ?)";
-            db.execSQL(query, new Object[]{key, String.valueOf(value)});
-        }else {
-            query = "UPDATE " + TABLE_NAME_SETTINGS + " SET value = ? WHERE name = ?";
-            db.execSQL(query, new Object[]{String.valueOf(value), key});
+        String query = "UPDATE " + TABLE_NAME_SETTINGS + " SET value = ? WHERE name = ?";
+        try (Cursor cursor = db.rawQuery(query, new String[]{key})) {
+            if (cursor.getCount() == 0) {
+                query = "INSERT INTO " + TABLE_NAME_SETTINGS + " (name, value) VALUES (?, ?)";
+                db.execSQL(query, new Object[]{key, String.valueOf(value)});
+            }
         }
     }
 
     public Boolean getBoolSetting(String key, Boolean defaultVal) {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{key});
-        cursor.moveToFirst();
-        return cursor.getCount() > 0 ? Boolean.parseBoolean(cursor.getString(1)) : defaultVal;
+        try (Cursor cursor = db.rawQuery(query, new String[]{ key })) {
+            cursor.moveToFirst();
+            return cursor.getCount() > 0 ? Boolean.parseBoolean(cursor.getString(1)) : defaultVal;
+        }
     }
 
     public Boolean isGuildWhitelisted(long id) {
         if (getBoolSetting("ignoreMutedServers", true) && UtilsKt.isGuildMuted(id)) return false;
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
-        return getBoolSetting("whitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
+            return getBoolSetting("whitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+        }
     }
 
     public Boolean isChannelWhitelisted(Channel channel) {
         var id = ChannelWrapper.getId(channel);
         if (getBoolSetting("ignoreMutedChannels", true) && UtilsKt.isChannelMuted(ChannelWrapper.getGuildId(channel), id)) return false;
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
-        return getBoolSetting("channelWhitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
+            return getBoolSetting("channelWhitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+        }
     }
 
     public void addGuildToWhitelist(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         if (getBoolSetting("whitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{id});
@@ -166,7 +155,6 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void removeGuildFromWhitelist(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         if (!getBoolSetting("whitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{id});
@@ -177,7 +165,6 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void addChannelToWhitelist(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         if (getBoolSetting("channelWhitelist", true)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{id});
@@ -188,7 +175,6 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void removeChannelFromWhitelist(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         if (!getBoolSetting("channelWhitelist", true)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{id});
@@ -199,33 +185,32 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public Boolean isMessageDeleted(long id) {
-        SQLiteDatabase db = getWritableDatabase();
-        String query = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
-        return cursor.getCount() > 0;
+        String query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME + " WHERE id = ?)";
+        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
+            cursor.moveToNext();
+            return cursor.getInt(0) == 1;
+        }
     }
 
     public Boolean isMessageEdited(long id) {
-        SQLiteDatabase db = getWritableDatabase();
-        String query = "SELECT * FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(id)});
-        return cursor.getCount() > 0;
+        String query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME_EDITS + " WHERE id = ?)";
+        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
+            cursor.moveToNext();
+            return cursor.getInt(0) == 1;
+        }
     }
 
     public Cursor getAllEditedMessages() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_EDITS;
         return db.rawQuery(query, null);
     }
 
     public Cursor getAllMessageEdits(long id) {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
         return db.rawQuery(query, new String[]{String.valueOf(id)});
     }
 
     public Cursor getAllDeletedMessages() {
-        SQLiteDatabase db = getWritableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME;
         return db.rawQuery(query, null);
     }
@@ -237,7 +222,6 @@ public final class SQLite extends SQLiteOpenHelper {
             Utils.showToast("Cannot import database from '" + exported + "' as it does not exist");
             return;
         }
-        SQLiteDatabase db = getWritableDatabase();
         String query = "ATTACH DATABASE ? AS exportdb";
         db.execSQL(query, new Object[]{exported});
         query = "INSERT INTO " + TABLE_NAME + " SELECT * FROM exportdb." + TABLE_NAME;
@@ -257,11 +241,10 @@ public final class SQLite extends SQLiteOpenHelper {
         String exported = Environment.getExternalStorageDirectory() + "/Aliucord/message_logger.db";
         try {
             File exportedDB = new File(exported);
-            exportedDB.createNewFile();
+            assert exportedDB.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        SQLiteDatabase db = getWritableDatabase();
         String query = "ATTACH DATABASE ? AS exportdb";
         db.execSQL(query, new Object[]{exported});
         db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME);
