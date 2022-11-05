@@ -34,8 +34,8 @@ public final class ReAdder {
                 var isBefore = param.args[3] != null;
                 var isAfter = param.args[4] != null;
                 var defaultLimit = messages.size() == 50;
-                var hasMoreBefore = jump || defaultLimit && isBefore;
-                var hasMoreAfter = jump || defaultLimit && isAfter;
+                var hasMoreBefore = jump || defaultLimit;
+                var hasMoreAfter = jump || defaultLimit;
                 param.args[0] = reAddDeletedMessages(messages, channelId, !hasMoreAfter && !isBefore, !hasMoreBefore && !isAfter);
             })
         );
