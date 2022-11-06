@@ -42,6 +42,9 @@ Commands:
 - lower
 - reverse
 
+### [NewEmojis](https://github.com/Juby210/Aliucord-plugins/raw/builds/NewEmojis.zip)
+Adds new emojis missing in old discord.
+
 ### [NoAutoReplyMention](https://github.com/Juby210/Aliucord-plugins/raw/builds/NoAutoReplyMention.zip)
 Disables reply mention by default.
 
