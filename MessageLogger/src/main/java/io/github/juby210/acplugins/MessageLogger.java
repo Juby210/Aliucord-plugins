@@ -112,6 +112,20 @@ public final class MessageLogger extends Plugin {
         patchDeleteMessages();
         patchUpdateMessages();
         patchProcessMessageText();
+
+        var messageState = MessageEntry.ReplyData.class.getDeclaredField("messageState");
+        messageState.setAccessible(true);
+        patcher.patch(WidgetChatListAdapterItemMessage.class.getDeclaredMethod("configureReplyPreview", MessageEntry.class), new PreHook(param -> {
+            var entry = (MessageEntry) param.args[0];
+            var replyData = entry.getReplyData();
+            MessageEntry entry2;
+            if (replyData.getMessageState() instanceof StoreMessageReplies.MessageState.Loaded &&
+                (entry2 = replyData.getMessageEntry()) != null && entry2.getMessage().getAuthor() == null) try {
+                messageState.set(replyData, StoreMessageReplies.MessageState.Unloaded.INSTANCE);
+            } catch (Throwable e) {
+                logger.error("Couldn't fix reply crash", e);
+            }
+        }));
     }
 
     @Override
