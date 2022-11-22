@@ -65,28 +65,29 @@ public final class SQLite extends SQLiteOpenHelper {
         String recordJson = InboundGatewayGsonParser.toJson(record);
         String deleteDataJson = InboundGatewayGsonParser.toJson(record.deleteData);
         String query = "INSERT INTO " + TABLE_NAME + " (id, delete_data, record) VALUES (?, ?, ?)";
-        db.execSQL(query, new Object[]{record.message.getId(), deleteDataJson, recordJson});
+        db.execSQL(query, new Object[]{ record.message.getId(), deleteDataJson, recordJson });
     }
 
     public void addNewMessageEdit(MessageRecord record) {
-        String recordJson = InboundGatewayGsonParser.toJson(record);
-        String query = "UPDATE " + TABLE_NAME_EDITS + " SET record = ? WHERE id = ?";
-        try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(record.message.getId()) })) {
-            if (cursor.getCount() == 0) {
-                query = "INSERT INTO " + TABLE_NAME_EDITS + " (id, record) VALUES (?, ?)";
-                db.execSQL(query, new Object[]{ record.message.getId(), recordJson });
-            }
+        var query = "SELECT id FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
+        var id = String.valueOf(record.message.getId());
+        try (var cursor = db.rawQuery(query, new String[]{ id })) {
+            var recordJson = InboundGatewayGsonParser.toJson(record);
+            if (cursor.getCount() > 0)
+                db.execSQL("UPDATE " + TABLE_NAME_EDITS + " SET record = ? WHERE id = ?", new String[]{ recordJson, id });
+            else
+                db.execSQL("INSERT INTO " + TABLE_NAME_EDITS + " (id, record) VALUES (?, ?)", new String[]{ id, recordJson });
         }
     }
 
     public void removeDeletedMessage(long id) {
         String query = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
-        db.execSQL(query, new Object[]{id});
+        db.execSQL(query, new Object[]{ id });
     }
 
     public void removeEditedMessage(long id) {
         String query = "DELETE FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
-        db.execSQL(query, new Object[]{id});
+        db.execSQL(query, new Object[]{ id });
     }
 
     public void clearEditedMessages() {
@@ -111,10 +112,10 @@ public final class SQLite extends SQLiteOpenHelper {
 
     public void setBoolSetting(String key, Boolean value) {
         String query = "UPDATE " + TABLE_NAME_SETTINGS + " SET value = ? WHERE name = ?";
-        try (Cursor cursor = db.rawQuery(query, new String[]{key})) {
+        try (Cursor cursor = db.rawQuery(query, new String[]{ key })) {
             if (cursor.getCount() == 0) {
                 query = "INSERT INTO " + TABLE_NAME_SETTINGS + " (name, value) VALUES (?, ?)";
-                db.execSQL(query, new Object[]{key, String.valueOf(value)});
+                db.execSQL(query, new Object[]{ key, String.valueOf(value) });
             }
         }
     }
@@ -147,40 +148,40 @@ public final class SQLite extends SQLiteOpenHelper {
     public void addGuildToWhitelist(long id) {
         if (getBoolSetting("whitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
-            db.execSQL(query, new Object[]{id});
-        }else {
+            db.execSQL(query, new Object[]{ id });
+        } else {
             String query = "DELETE FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
-            db.execSQL(query, new Object[]{id});
+            db.execSQL(query, new Object[]{ id });
         }
     }
 
     public void removeGuildFromWhitelist(long id) {
         if (!getBoolSetting("whitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_GUILDS + " (id) VALUES (?)";
-            db.execSQL(query, new Object[]{id});
-        }else {
+            db.execSQL(query, new Object[]{ id });
+        } else {
             String query = "DELETE FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
-            db.execSQL(query, new Object[]{id});
+            db.execSQL(query, new Object[]{ id });
         }
     }
 
     public void addChannelToWhitelist(long id) {
         if (getBoolSetting("channelWhitelist", true)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
-            db.execSQL(query, new Object[]{id});
-        }else {
+            db.execSQL(query, new Object[]{ id });
+        } else {
             String query = "DELETE FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
-            db.execSQL(query, new Object[]{id});
+            db.execSQL(query, new Object[]{ id });
         }
     }
 
     public void removeChannelFromWhitelist(long id) {
         if (!getBoolSetting("channelWhitelist", true)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
-            db.execSQL(query, new Object[]{id});
-        }else {
+            db.execSQL(query, new Object[]{ id });
+        } else {
             String query = "DELETE FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
-            db.execSQL(query, new Object[]{id});
+            db.execSQL(query, new Object[]{ id });
         }
     }
 
@@ -207,7 +208,7 @@ public final class SQLite extends SQLiteOpenHelper {
 
     public Cursor getAllMessageEdits(long id) {
         String query = "SELECT * FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
-        return db.rawQuery(query, new String[]{String.valueOf(id)});
+        return db.rawQuery(query, new String[]{ String.valueOf(id) });
     }
 
     public Cursor getAllDeletedMessages() {
@@ -223,7 +224,7 @@ public final class SQLite extends SQLiteOpenHelper {
             return;
         }
         String query = "ATTACH DATABASE ? AS exportdb";
-        db.execSQL(query, new Object[]{exported});
+        db.execSQL(query, new Object[]{ exported });
         query = "INSERT INTO " + TABLE_NAME + " SELECT * FROM exportdb." + TABLE_NAME;
         db.execSQL(query);
         query = "INSERT INTO " + TABLE_NAME_EDITS + " SELECT * FROM exportdb." + TABLE_NAME_EDITS;
@@ -246,7 +247,7 @@ public final class SQLite extends SQLiteOpenHelper {
             e.printStackTrace();
         }
         String query = "ATTACH DATABASE ? AS exportdb";
-        db.execSQL(query, new Object[]{exported});
+        db.execSQL(query, new Object[]{ exported });
         db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_EDITS);
         db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_GUILDS);
