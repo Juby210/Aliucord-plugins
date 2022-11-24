@@ -119,7 +119,7 @@ public final class MessageLogger extends Plugin {
             var entry = (MessageEntry) param.args[0];
             var replyData = entry.getReplyData();
             MessageEntry entry2;
-            if (replyData.getMessageState() instanceof StoreMessageReplies.MessageState.Loaded &&
+            if (replyData != null && replyData.getMessageState() instanceof StoreMessageReplies.MessageState.Loaded &&
                 (entry2 = replyData.getMessageEntry()) != null && entry2.getMessage().getAuthor() == null) try {
                 messageState.set(replyData, StoreMessageReplies.MessageState.Unloaded.INSTANCE);
             } catch (Throwable e) {
