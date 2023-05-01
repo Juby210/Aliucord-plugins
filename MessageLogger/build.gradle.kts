@@ -3,7 +3,7 @@ description = "Saves deleted / edited messages to a SQLite database and restores
 
 aliucord.changelog.set("""
     1.1.3
-    
+
     * fix spamming debug logs with NPE
 
     1.1.2

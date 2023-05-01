@@ -6,7 +6,7 @@ aliucord.changelog.set("""
     ======================
 
     * updated to **126.18**
-    
+
     1.0.7 {improved marginTop}
     ======================
 
