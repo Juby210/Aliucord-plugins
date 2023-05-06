@@ -19,4 +19,5 @@ include(":SquareAvatars")
 include(":Tags")
 include(":UserDetails")
 include(":ViewRaw")
+include(":ViewStreamPreview")
 rootProject.name = "plugins"
