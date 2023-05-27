@@ -3,8 +3,8 @@ package io.github.juby210.acplugins
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.view.View
-import android.widget.LinearLayout
 import androidx.cardview.widget.CardView
+import androidx.core.widget.NestedScrollView
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.rn.user.RNUserProfile
 import com.aliucord.entities.Plugin
@@ -26,7 +26,7 @@ class NewProfiles : Plugin() {
                     ?: profile.userProfile.run { themeColors ?: accentColor?.let { c -> intArrayOf(c, c) } } ?: return@after
                 val binding = WidgetUserSheet.`access$getBinding$p`(this)
                 val actionsContainer = binding.D
-                val root = actionsContainer.parent as LinearLayout
+                val root = actionsContainer.parent.parent.parent as NestedScrollView
                 val alpha = 0x50000000
 
                 // make non-transparent containers transparent or opaque
