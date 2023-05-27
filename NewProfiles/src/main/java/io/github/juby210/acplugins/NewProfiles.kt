@@ -36,13 +36,15 @@ class NewProfiles : Plugin() {
                     (parent as View).setBackgroundColor(0)
                 }
                 if (userSettings.theme != "light") {
-                    binding.b.setCardBackgroundColor(alpha) // about me
-                    binding.h.setBackgroundColor(0) // activity
-                    listOf(binding.k, binding.n).forEach { view -> // admin actions and connections
-                        view.apply {
-                            setBackgroundColor(0x20000000)
-                            (parent as CardView).setCardBackgroundColor(0x20000000)
-                        }
+                    listOf(binding.b, binding.R, binding.j).forEach { view -> // about me, voice settings, and admin actions
+                        view.setCardBackgroundColor(alpha)
+                    }
+                    listOf(binding.h, binding.I).forEach { view -> // activity and edit profile buttons
+                        view.setBackgroundColor(0)
+                    }
+                    binding.n.apply { // connections
+                        setBackgroundColor(0x20000000)
+                        (parent as CardView).setCardBackgroundColor(0x20000000)
                     }
                     // binding.B.apply { // note
                     //     boxBackgroundColor = alpha
