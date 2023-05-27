@@ -46,10 +46,11 @@ class NewProfiles : Plugin() {
                         setBackgroundColor(0x20000000)
                         (parent as CardView).setCardBackgroundColor(0x20000000)
                     }
-                    // binding.B.apply { // note
-                    //     boxBackgroundColor = alpha
-                    //     (parent as CardView).setCardBackgroundColor(alpha)
-                    // }
+                    binding.B.apply { // note
+                        boxBackgroundColor = alpha
+                        (parent as CardView).setCardBackgroundColor(alpha)
+                    }
+                    binding.A.setBackgroundColor(0) // note
                 }
 
                 val colors = intArrayOf(alpha + themeColors[0], alpha + themeColors[0], alpha + themeColors[1])
