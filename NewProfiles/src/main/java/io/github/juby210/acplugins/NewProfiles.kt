@@ -3,8 +3,8 @@ package io.github.juby210.acplugins
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.view.View
-import android.widget.LinearLayout
 import androidx.cardview.widget.CardView
+import androidx.core.widget.NestedScrollView
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.rn.user.RNUserProfile
 import com.aliucord.entities.Plugin
@@ -26,7 +26,7 @@ class NewProfiles : Plugin() {
                     ?: profile.userProfile.run { themeColors ?: accentColor?.let { c -> intArrayOf(c, c) } } ?: return@after
                 val binding = WidgetUserSheet.`access$getBinding$p`(this)
                 val actionsContainer = binding.D
-                val root = actionsContainer.parent as LinearLayout
+                val root = actionsContainer.parent.parent.parent as NestedScrollView
                 val alpha = 0x50000000
 
                 // make non-transparent containers transparent or opaque
@@ -36,16 +36,21 @@ class NewProfiles : Plugin() {
                     (parent as View).setBackgroundColor(0)
                 }
                 if (userSettings.theme != "light") {
-                    binding.b.setCardBackgroundColor(alpha) // about me
-                    binding.h.setBackgroundColor(0) // activity
+                    listOf(binding.b, binding.R, binding.j).forEach { view -> // about me, voice settings, and admin actions
+                        view.setCardBackgroundColor(alpha)
+                    }
+                    listOf(binding.h, binding.I).forEach { view -> // activity and edit profile buttons
+                        view.setBackgroundColor(0)
+                    }
                     binding.n.apply { // connections
                         setBackgroundColor(0x20000000)
                         (parent as CardView).setCardBackgroundColor(0x20000000)
                     }
-                    // binding.B.apply { // note
-                    //     boxBackgroundColor = alpha
-                    //     (parent as CardView).setCardBackgroundColor(alpha)
-                    // }
+                    binding.B.apply { // note
+                        boxBackgroundColor = alpha
+                        (parent as CardView).setCardBackgroundColor(alpha)
+                    }
+                    binding.A.setBackgroundColor(0) // note
                 }
 
                 val colors = intArrayOf(alpha + themeColors[0], alpha + themeColors[0], alpha + themeColors[1])
