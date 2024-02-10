@@ -27,6 +27,8 @@ import com.discord.views.CheckedSetting;
 import com.discord.widgets.media.WidgetMedia;
 import com.lytefast.flexinput.R;
 
+import java.util.regex.Pattern;
+
 @AliucordPlugin
 @SuppressWarnings("unused")
 public final class RemoveZoomLimit extends Plugin {
@@ -64,13 +66,11 @@ public final class RemoveZoomLimit extends Plugin {
 
     @Override
     public void start(Context context) throws Throwable {
-        // load full resolution to see details while zooming
+        // remove limited width and height from the url
+        var pattern = Pattern.compile("\\?width=\\d+&height=\\d+");
         patcher.patch(WidgetMedia.class, "getFormattedUrl", new Class<?>[]{ Context.class, Uri.class }, new Hook(param -> {
             var res = (String) param.getResult();
-            if (res.contains(".discordapp.net/")) {
-                var arr = res.split("\\?");
-                param.setResult(arr[0] + (arr[1].contains("format=") ? "?format=" + arr[1].split("format=")[1] : ""));
-            }
+            if (res.contains(".discordapp.net/")) param.setResult(pattern.matcher(res).replaceFirst(""));
         }));
 
         // com.facebook.samples.zoomable.DefaultZoomableController limitScale

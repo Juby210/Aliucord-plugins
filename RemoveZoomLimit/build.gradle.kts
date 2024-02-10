@@ -1,9 +1,9 @@
-version = "1.0.8"
+version = "1.0.9"
 description = "Removes maximum zoom limit."
 
 aliucord.changelog.set("""
-    Updated {updated marginTop}
+    Fixed {updated marginTop}
     ======================
 
-    * updated to **112.4**
+    * fixed not loading attachments in media viewer
 """.trimIndent())
