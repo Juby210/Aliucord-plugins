@@ -100,7 +100,7 @@ class NewEmojis : Plugin() {
                 }
 
                 fun getUrl(code: String, new: Boolean) =
-                    "https://jdecked.github.io/twemoji/v/${if (new) "14.1.2" else "14.1.1"}/72x72/$code.png"
+                    "https://jdecked.github.io/twemoji/v/${if (new) "15.0.3" else "14.1.1"}/72x72/$code.png"
             }
         )
     }
