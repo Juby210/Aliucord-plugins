@@ -23,7 +23,7 @@ class NewProfiles : Plugin() {
             val profile = model.userProfile
             if (profile is RNUserProfile) {
                 val themeColors = profile.guildMemberProfile?.run { themeColors ?: accentColor?.let { c -> intArrayOf(c, c) } }
-                    ?: profile.userProfile.run { themeColors ?: accentColor?.let { c -> intArrayOf(c, c) } } ?: return@after
+                    ?: profile.userProfile?.run { themeColors ?: accentColor?.let { c -> intArrayOf(c, c) } } ?: return@after
                 val binding = WidgetUserSheet.`access$getBinding$p`(this)
                 val actionsContainer = binding.D
                 val root = actionsContainer.parent.parent.parent as NestedScrollView
