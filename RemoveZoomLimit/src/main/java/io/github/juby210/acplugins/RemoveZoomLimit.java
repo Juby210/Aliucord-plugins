@@ -67,7 +67,7 @@ public final class RemoveZoomLimit extends Plugin {
     @Override
     public void start(Context context) throws Throwable {
         // remove limited width and height from the url
-        var pattern = Pattern.compile("\\?width=\\d+&height=\\d+");
+        var pattern = Pattern.compile("width=\\d+&height=\\d+");
         patcher.patch(WidgetMedia.class, "getFormattedUrl", new Class<?>[]{ Context.class, Uri.class }, new Hook(param -> {
             var res = (String) param.getResult();
             if (res.contains(".discordapp.net/")) param.setResult(pattern.matcher(res).replaceFirst(""));
