@@ -5,7 +5,7 @@ aliucord.changelog.set("""
     1.1.4
     ======================
 
-    * fix broken setting
+    * fix setting not saving correctly
 
     1.1.3
     ======================
