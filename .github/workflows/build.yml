@@ -1,10 +1,16 @@
 name: Build
 
+# https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#concurrency
+concurrency: 
+  group: "build"
+  cancel-in-progress: true
+
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+    paths-ignore:
+      - '*.md'
 
 jobs:
   build:
@@ -37,16 +43,11 @@ jobs:
         cp **/build/*.zip $GITHUB_WORKSPACE/builds
         cp build/updater.json $GITHUB_WORKSPACE/builds
 
-    - name: Debug information
-      run: |
-        git branch -a
-        git remote -v
-
     - name: Push builds
       run: |
         cd $GITHUB_WORKSPACE/builds
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
         git add .
-        git commit -m "Build $GITHUB_SHA"
+        git commit -m "Build $GITHUB_SHA" || exit 0
         git push
