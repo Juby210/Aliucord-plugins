@@ -111,11 +111,14 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void setBoolSetting(String key, Boolean value) {
-        String query = "UPDATE " + TABLE_NAME_SETTINGS + " SET value = ? WHERE name = ?";
+        String query = "SELECT * FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
         try (Cursor cursor = db.rawQuery(query, new String[]{ key })) {
             if (cursor.getCount() == 0) {
                 query = "INSERT INTO " + TABLE_NAME_SETTINGS + " (name, value) VALUES (?, ?)";
                 db.execSQL(query, new Object[]{ key, String.valueOf(value) });
+            } else {
+                query = "UPDATE " + TABLE_NAME_SETTINGS + " SET value = ? WHERE name = ?";
+                db.execSQL(query, new Object[]{ String.valueOf(value), key });
             }
         }
     }
