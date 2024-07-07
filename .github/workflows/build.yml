@@ -18,7 +18,7 @@ jobs:
     - name: Checkout builds
       uses: actions/checkout@v4
       with:
-        ref: 'builds'
+        ref: 'main'
         path: 'builds'
 
     - name: Setup JDK 11
