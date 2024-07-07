@@ -37,6 +37,11 @@ jobs:
         cp **/build/*.zip $GITHUB_WORKSPACE/builds
         cp build/updater.json $GITHUB_WORKSPACE/builds
 
+    - name: Debug information
+      run: |
+        git branch -a
+        git remote -v
+
     - name: Push builds
       run: |
         cd $GITHUB_WORKSPACE/builds
