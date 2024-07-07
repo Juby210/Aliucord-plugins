@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@master
       with:
         path: 'src'
 
     - name: Checkout builds
-      uses: actions/checkout@v4
+      uses: actions/checkout@master
       with:
-        ref: 'main'
+        ref: 'builds'
         path: 'builds'
 
     - name: Setup JDK 11
