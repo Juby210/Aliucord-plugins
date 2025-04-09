@@ -40,25 +40,31 @@ public final class SQLite extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + TABLE_NAME + " (" +
-            "id LONG, " +
-            "delete_data, " +
-            "record TEXT)";
-        db.execSQL(query);
-        query = "CREATE TABLE " + TABLE_NAME_EDITS + " (" +
-            "id LONG, " +
-            "record TEXT)";
-        db.execSQL(query);
-        query = "CREATE TABLE " + TABLE_NAME_GUILDS + " (" +
-            "id LONG)";
-        db.execSQL(query);
-        query = "CREATE TABLE " + TABLE_NAME_CHANNELS + " (" +
-            "id LONG)";
-        db.execSQL(query);
-        query = "CREATE TABLE " + TABLE_NAME_SETTINGS + " (" +
-            "name TEXT, " +
-            "value TEXT)";
-        db.execSQL(query);
+        db.beginTransaction();
+        try {
+            String query = "CREATE TABLE " + TABLE_NAME + " (" +
+                "id LONG PRIMARY KEY, " +
+                "delete_data, " +
+                "record TEXT)";
+            db.execSQL(query);
+            query = "CREATE TABLE " + TABLE_NAME_EDITS + " (" +
+                "id LONG PRIMARY KEY, " +
+                "record TEXT)";
+            db.execSQL(query);
+            query = "CREATE TABLE " + TABLE_NAME_GUILDS + " (" +
+                "id LONG PRIMARY KEY)";
+            db.execSQL(query);
+            query = "CREATE TABLE " + TABLE_NAME_CHANNELS + " (" +
+                "id LONG PRIMARY KEY)";
+            db.execSQL(query);
+            query = "CREATE TABLE " + TABLE_NAME_SETTINGS + " (" +
+                "name TEXT, " +
+                "value TEXT)";
+            db.execSQL(query);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     public void addNewMessage(MessageRecord record) {
@@ -69,11 +75,12 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void addNewMessageEdit(MessageRecord record) {
-        var query = "SELECT id FROM " + TABLE_NAME_EDITS + " WHERE id = ?";
+        var query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME_EDITS + " WHERE id = ?)";
         var id = String.valueOf(record.message.getId());
         try (var cursor = db.rawQuery(query, new String[]{ id })) {
             var recordJson = InboundGatewayGsonParser.toJson(record);
-            if (cursor.getCount() > 0)
+            cursor.moveToNext();
+            if (cursor.getInt(0) == 1)
                 db.execSQL("UPDATE " + TABLE_NAME_EDITS + " SET record = ? WHERE id = ?", new String[]{ recordJson, id });
             else
                 db.execSQL("INSERT INTO " + TABLE_NAME_EDITS + " (id, record) VALUES (?, ?)", new String[]{ id, recordJson });
@@ -111,9 +118,10 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void setBoolSetting(String key, Boolean value) {
-        String query = "SELECT * FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
+        String query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?)";
         try (Cursor cursor = db.rawQuery(query, new String[]{ key })) {
-            if (cursor.getCount() == 0) {
+            cursor.moveToNext();
+            if (cursor.getInt(0) == 0) {
                 query = "INSERT INTO " + TABLE_NAME_SETTINGS + " (name, value) VALUES (?, ?)";
                 db.execSQL(query, new Object[]{ key, String.valueOf(value) });
             } else {
@@ -124,27 +132,29 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public Boolean getBoolSetting(String key, Boolean defaultVal) {
-        String query = "SELECT * FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
+        String query = "SELECT value FROM " + TABLE_NAME_SETTINGS + " WHERE name = ?";
         try (Cursor cursor = db.rawQuery(query, new String[]{ key })) {
-            cursor.moveToFirst();
-            return cursor.getCount() > 0 ? Boolean.parseBoolean(cursor.getString(1)) : defaultVal;
+            cursor.moveToNext();
+            return cursor.getCount() > 0 ? Boolean.parseBoolean(cursor.getString(0)) : defaultVal;
         }
     }
 
     public Boolean isGuildWhitelisted(long id) {
         if (getBoolSetting("ignoreMutedServers", true) && UtilsKt.isGuildMuted(id)) return false;
-        String query = "SELECT * FROM " + TABLE_NAME_GUILDS + " WHERE id = ?";
+        String query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME_GUILDS + " WHERE id = ?)";
         try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
-            return getBoolSetting("whitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+            cursor.moveToNext();
+            return getBoolSetting("whitelist", false) ? cursor.getInt(0) == 1 : cursor.getInt(0) == 0;
         }
     }
 
     public Boolean isChannelWhitelisted(Channel channel) {
         var id = ChannelWrapper.getId(channel);
         if (getBoolSetting("ignoreMutedChannels", true) && UtilsKt.isChannelMuted(ChannelWrapper.getGuildId(channel), id)) return false;
-        String query = "SELECT * FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?";
+        String query = "SELECT EXISTS (SELECT 1 FROM " + TABLE_NAME_CHANNELS + " WHERE id = ?)";
         try (Cursor cursor = db.rawQuery(query, new String[]{ String.valueOf(id) })) {
-            return getBoolSetting("channelWhitelist", false) ? cursor.getCount() > 0 : cursor.getCount() == 0;
+            cursor.moveToNext();
+            return getBoolSetting("channelWhitelist", false) ? cursor.getInt(0) == 1 : cursor.getInt(0) == 0;
         }
     }
 
@@ -169,7 +179,7 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void addChannelToWhitelist(long id) {
-        if (getBoolSetting("channelWhitelist", true)) {
+        if (getBoolSetting("channelWhitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{ id });
         } else {
@@ -179,7 +189,7 @@ public final class SQLite extends SQLiteOpenHelper {
     }
 
     public void removeChannelFromWhitelist(long id) {
-        if (!getBoolSetting("channelWhitelist", true)) {
+        if (!getBoolSetting("channelWhitelist", false)) {
             String query = "INSERT INTO " + TABLE_NAME_CHANNELS + " (id) VALUES (?)";
             db.execSQL(query, new Object[]{ id });
         } else {
@@ -226,75 +236,97 @@ public final class SQLite extends SQLiteOpenHelper {
             Utils.showToast("Cannot import database from '" + exported + "' as it does not exist");
             return;
         }
-        String query = "ATTACH DATABASE ? AS exportdb";
-        db.execSQL(query, new Object[]{ exported });
-        query = "INSERT INTO " + TABLE_NAME + " SELECT * FROM exportdb." + TABLE_NAME;
-        db.execSQL(query);
-        query = "INSERT INTO " + TABLE_NAME_EDITS + " SELECT * FROM exportdb." + TABLE_NAME_EDITS;
-        db.execSQL(query);
-        query = "INSERT INTO " + TABLE_NAME_GUILDS + " SELECT * FROM exportdb." + TABLE_NAME_GUILDS;
-        db.execSQL(query);
-        query = "INSERT INTO " + TABLE_NAME_CHANNELS + " SELECT * FROM exportdb." + TABLE_NAME_CHANNELS;
-        db.execSQL(query);
-        query = "INSERT INTO " + TABLE_NAME_SETTINGS + " SELECT * FROM exportdb." + TABLE_NAME_SETTINGS;
-        db.execSQL(query);
-        Utils.showToast("Successfully imported database (restart required)");
+        db.beginTransaction();
+        try {
+            String query = "ATTACH DATABASE ? AS exportdb";
+            db.execSQL(query, new Object[]{ exported });
+            query = "INSERT INTO " + TABLE_NAME + " SELECT * FROM exportdb." + TABLE_NAME;
+            db.execSQL(query);
+            query = "INSERT INTO " + TABLE_NAME_EDITS + " SELECT * FROM exportdb." + TABLE_NAME_EDITS;
+            db.execSQL(query);
+            query = "INSERT INTO " + TABLE_NAME_GUILDS + " SELECT * FROM exportdb." + TABLE_NAME_GUILDS;
+            db.execSQL(query);
+            query = "INSERT INTO " + TABLE_NAME_CHANNELS + " SELECT * FROM exportdb." + TABLE_NAME_CHANNELS;
+            db.execSQL(query);
+            query = "INSERT INTO " + TABLE_NAME_SETTINGS + " SELECT * FROM exportdb." + TABLE_NAME_SETTINGS;
+            db.execSQL(query);
+            Utils.showToast("Successfully imported database (restart required)");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     public void exportDatabase() {
         String exported = Environment.getExternalStorageDirectory() + "/Aliucord/message_logger.db";
         try {
             File exportedDB = new File(exported);
-            assert exportedDB.createNewFile();
+
+            if (!exportedDB.createNewFile()) {
+                Utils.showToast("Cannot export database to '" + exported + "' as it already exists");
+                return;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String query = "ATTACH DATABASE ? AS exportdb";
-        db.execSQL(query, new Object[]{ exported });
-        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_EDITS);
-        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_GUILDS);
-        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_CHANNELS);
-        db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_SETTINGS);
-        query = "CREATE TABLE exportdb." + TABLE_NAME + " (" +
-            "id LONG, " +
-            "delete_data, " +
-            "record TEXT)";
-        db.execSQL(query);
-        query = "CREATE TABLE exportdb." + TABLE_NAME_EDITS + " (" +
-            "id LONG, " +
-            "record TEXT)";
-        db.execSQL(query);
-        query = "CREATE TABLE exportdb." + TABLE_NAME_GUILDS + " (" +
-            "id LONG)";
-        db.execSQL(query);
-        query = "CREATE TABLE exportdb." + TABLE_NAME_CHANNELS + " (" +
-            "id LONG)";
-        db.execSQL(query);
-        query = "CREATE TABLE exportdb." + TABLE_NAME_SETTINGS + " (" +
-            "name TEXT, " +
-            "value TEXT)";
-        db.execSQL(query);
-        query = "INSERT INTO exportdb." + TABLE_NAME + " SELECT * FROM " + TABLE_NAME;
-        db.execSQL(query);
-        query = "INSERT INTO exportdb." + TABLE_NAME_EDITS + " SELECT * FROM " + TABLE_NAME_EDITS;
-        db.execSQL(query);
-        query = "INSERT INTO exportdb." + TABLE_NAME_GUILDS + " SELECT * FROM " + TABLE_NAME_GUILDS;
-        db.execSQL(query);
-        query = "INSERT INTO exportdb." + TABLE_NAME_CHANNELS + " SELECT * FROM " + TABLE_NAME_CHANNELS;
-        db.execSQL(query);
-        query = "INSERT INTO exportdb." + TABLE_NAME_SETTINGS + " SELECT * FROM " + TABLE_NAME_SETTINGS;
-        db.execSQL(query);
-        Utils.showToast("Successfully exported database to '" + exported + "'", true);
+        db.beginTransaction();
+        try {
+            String query = "ATTACH DATABASE ? AS exportdb";
+            db.execSQL(query, new Object[]{ exported });
+            db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_EDITS);
+            db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_GUILDS);
+            db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_CHANNELS);
+            db.execSQL("DROP TABLE IF EXISTS exportdb." + TABLE_NAME_SETTINGS);
+            query = "CREATE TABLE exportdb." + TABLE_NAME + " (" +
+                "id LONG PRIMARY KEY, " +
+                "delete_data, " +
+                "record TEXT)";
+            db.execSQL(query);
+            query = "CREATE TABLE exportdb." + TABLE_NAME_EDITS + " (" +
+                "id LONG PRIMARY KEY, " +
+                "record TEXT)";
+            db.execSQL(query);
+            query = "CREATE TABLE exportdb." + TABLE_NAME_GUILDS + " (" +
+                "id LONG PRIMARY KEY)";
+            db.execSQL(query);
+            query = "CREATE TABLE exportdb." + TABLE_NAME_CHANNELS + " (" +
+                "id LONG PRIMARY KEY)";
+            db.execSQL(query);
+            query = "CREATE TABLE exportdb." + TABLE_NAME_SETTINGS + " (" +
+                "name TEXT, " +
+                "value TEXT)";
+            db.execSQL(query);
+            query = "INSERT INTO exportdb." + TABLE_NAME + " SELECT * FROM " + TABLE_NAME;
+            db.execSQL(query);
+            query = "INSERT INTO exportdb." + TABLE_NAME_EDITS + " SELECT * FROM " + TABLE_NAME_EDITS;
+            db.execSQL(query);
+            query = "INSERT INTO exportdb." + TABLE_NAME_GUILDS + " SELECT * FROM " + TABLE_NAME_GUILDS;
+            db.execSQL(query);
+            query = "INSERT INTO exportdb." + TABLE_NAME_CHANNELS + " SELECT * FROM " + TABLE_NAME_CHANNELS;
+            db.execSQL(query);
+            query = "INSERT INTO exportdb." + TABLE_NAME_SETTINGS + " SELECT * FROM " + TABLE_NAME_SETTINGS;
+            db.execSQL(query);
+            Utils.showToast("Successfully exported database to '" + exported + "'", true);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_EDITS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_GUILDS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_CHANNELS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_SETTINGS);
+        db.beginTransaction();
+        try {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_EDITS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_GUILDS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_CHANNELS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_SETTINGS);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
         onCreate(db);
     }
 }
