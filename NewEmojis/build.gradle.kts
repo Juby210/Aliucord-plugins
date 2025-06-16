@@ -1,7 +1,12 @@
-version = "1.0.2"
+version = "1.0.3"
 description = "Adds new emojis missing in old discord."
 
 aliucord.changelog.set("""
+    1.0.3 {added}
+    ======================
+
+    * added more emoji's
+
     1.0.2 {updated marginTop}
     ======================
 
