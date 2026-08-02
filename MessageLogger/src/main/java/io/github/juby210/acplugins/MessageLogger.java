@@ -13,6 +13,7 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -26,6 +27,7 @@ import com.aliucord.patcher.PreHook;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
+import com.discord.models.domain.ModelMessageDelete;
 import com.discord.models.message.Message;
 import com.discord.stores.*;
 import com.discord.utilities.color.ColorCompat;
@@ -47,6 +49,8 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.github.juby210.acplugins.messagelogger.*;
 import kotlin.jvm.functions.Function1;
@@ -134,6 +138,11 @@ public final class MessageLogger extends Plugin {
         sqlite.close();
     }
 
+    private CopyOnWriteArrayList<Long> hiddenDeletes = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<Long> hiddenEdits = new CopyOnWriteArrayList<>();
+    private AtomicBoolean disableDeletePatch = new AtomicBoolean(false);
+    private AtomicBoolean disableUpdatePatch = new AtomicBoolean(false);
+
     private void patchWidgetChatListActions() throws Throwable {
         var hideIcon = Utils.getAppContext().getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
 
@@ -158,10 +167,23 @@ public final class MessageLogger extends Plugin {
                         lay.addView(tw, lay.getChildCount());
                         tw.setOnClickListener((v) -> {
                             if (isDeleted) {
+                                hiddenDeletes.addIfAbsent(messageId);
                                 sqlite.removeDeletedMessage(messageId);
+                                disableDeletePatch.set(true);
+                                StoreStream.getMessages().handleMessageDelete(
+                                    new ModelMessageDelete(message.getChannelId(), messageId)
+                                );
                             }
                             if (isEdited) {
+                                hiddenEdits.addIfAbsent(messageId);
                                 sqlite.removeEditedMessage(messageId);
+                                if(!isDeleted) {
+                                    disableUpdatePatch.set(true);
+                                    StoreStream.getMessages().handleMessageUpdate(
+                                        message.synthesizeApiMessage()
+                                    );
+                                    updateMessages(messageId);
+                                }
                             }
                             Utils.showToast("Removed From Logs");
                             ((WidgetChatListActions) cf.thisObject).dismiss();
@@ -273,7 +295,7 @@ public final class MessageLogger extends Plugin {
 
     private void patchDeleteMessages() {
         patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
-            if (!sqlite.getBoolSetting("logDeletes", true)) {
+            if (!sqlite.getBoolSetting("logDeletes", true) || disableDeletePatch.compareAndSet(true, false)) {
                 return;
             }
             var channelId = (long) param.args[0];
@@ -290,6 +312,7 @@ public final class MessageLogger extends Plugin {
             for (var id : newDeleted) {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
+                hiddenDeletes.remove(id);
                 // User author;
                 // if (!selfDelete && (author = msg.getAuthor()) != null && new CoreUser(author).getId() == StoreStream.getUsers().getMe().getId()) selfDelete = true;
                 var channelDeletes = deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
@@ -314,6 +337,7 @@ public final class MessageLogger extends Plugin {
 
     private void patchUpdateMessages() {
         patcher.patch(StoreMessagesHolder.class, "updateMessages", new Class<?>[]{ com.discord.api.message.Message.class }, new PreHook(param -> {
+            if(disableUpdatePatch.compareAndSet(true, false)) return;
             var msg = new Message((com.discord.api.message.Message) param.args[0]);
             var id = msg.getId();
             var edited = msg.getEditedTimestamp();
@@ -332,6 +356,7 @@ public final class MessageLogger extends Plugin {
                     ) {
                         String content;
                         if (origMsg != null && (content = origMsg.getContent()) != null && !content.equals(msg.getContent())) {
+                            hiddenEdits.remove(id);
                             var channelEdits = editedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
                             channelEdits.add(id);
                             var record = messageRecord.computeIfAbsent(id, k -> new MessageRecord());
@@ -375,6 +400,13 @@ public final class MessageLogger extends Plugin {
             var record = messageRecord.get(id);
             if (record == null) return;
 
+            //prevent removed deleted messages from sometimes re-appearing after app is sent to background
+            if (hiddenDeletes.contains(id)) {
+                View root = ((WidgetChatListAdapterItemMessage) param.thisObject).itemView;
+                root.setVisibility(View.GONE);
+                root.setLayoutParams(new ViewGroup.LayoutParams(0, 0));
+            }
+
             try {
                 var textView = (SimpleDraweeSpanTextView) param.args[0];
                 var builder = (DraweeSpanStringBuilder) mDraweeStringBuilder.get(textView);
@@ -396,7 +428,7 @@ public final class MessageLogger extends Plugin {
                         " (deleted: " + TimeUtils.toReadableTimeString(context, record.deleteData.time, clock) + ")");
                 }
 
-                if (record.editHistory.size() > 0) {
+                if ((record.editHistory.size() > 0) && (!hiddenEdits.contains(id))) {
                     var data = ((WidgetChatListItem) param.thisObject).adapter.getData();
                     if (data != null) {
                         MessagePreprocessor messagePreprocessor = (MessagePreprocessor) getMessagePreprocessor.invoke(
