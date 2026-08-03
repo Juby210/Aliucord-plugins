@@ -13,7 +13,6 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -138,7 +137,6 @@ public final class MessageLogger extends Plugin {
         sqlite.close();
     }
 
-    private CopyOnWriteArrayList<Long> hiddenDeletes = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<Long> hiddenEdits = new CopyOnWriteArrayList<>();
     private AtomicBoolean disableDeletePatch = new AtomicBoolean(false);
     private AtomicBoolean disableUpdatePatch = new AtomicBoolean(false);
@@ -167,10 +165,9 @@ public final class MessageLogger extends Plugin {
                         lay.addView(tw, lay.getChildCount());
                         tw.setOnClickListener((v) -> {
                             if (isDeleted) {
-                                hiddenDeletes.addIfAbsent(messageId);
                                 sqlite.removeDeletedMessage(messageId);
                                 disableDeletePatch.set(true);
-                                StoreStream.getMessages().handleMessageDelete(
+                                StoreStream.access$handleMessageDelete(
                                     new ModelMessageDelete(message.getChannelId(), messageId)
                                 );
                             }
@@ -179,7 +176,7 @@ public final class MessageLogger extends Plugin {
                                 sqlite.removeEditedMessage(messageId);
                                 if(!isDeleted) {
                                     disableUpdatePatch.set(true);
-                                    StoreStream.getMessages().handleMessageUpdate(
+                                    StoreStream.access$handleMessageUpdate(
                                         message.synthesizeApiMessage()
                                     );
                                     updateMessages(messageId);
@@ -312,7 +309,6 @@ public final class MessageLogger extends Plugin {
             for (var id : newDeleted) {
                 var msg = getCachedMessage(channelId, id);
                 if (msg == null) continue;
-                hiddenDeletes.remove(id);
                 // User author;
                 // if (!selfDelete && (author = msg.getAuthor()) != null && new CoreUser(author).getId() == StoreStream.getUsers().getMe().getId()) selfDelete = true;
                 var channelDeletes = deletedMessagesRecord.computeIfAbsent(channelId, k -> new ArrayList<>());
@@ -399,13 +395,6 @@ public final class MessageLogger extends Plugin {
             if ((channelDeletes == null || !channelDeletes.contains(id)) && (channelEdits == null || !channelEdits.contains(id))) return;
             var record = messageRecord.get(id);
             if (record == null) return;
-
-            //prevent removed deleted messages from sometimes re-appearing after app is sent to background
-            if (hiddenDeletes.contains(id)) {
-                View root = ((WidgetChatListAdapterItemMessage) param.thisObject).itemView;
-                root.setVisibility(View.GONE);
-                root.setLayoutParams(new ViewGroup.LayoutParams(0, 0));
-            }
 
             try {
                 var textView = (SimpleDraweeSpanTextView) param.args[0];
