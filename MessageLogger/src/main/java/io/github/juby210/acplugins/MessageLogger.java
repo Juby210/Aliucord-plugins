@@ -26,6 +26,7 @@ import com.aliucord.patcher.PreHook;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.discord.databinding.WidgetGuildContextMenuBinding;
 import com.discord.models.deserialization.gson.InboundGatewayGsonParser;
+import com.discord.models.domain.ModelMessageDelete;
 import com.discord.models.message.Message;
 import com.discord.stores.*;
 import com.discord.utilities.color.ColorCompat;
@@ -47,6 +48,7 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.juby210.acplugins.messagelogger.*;
 import kotlin.jvm.functions.Function1;
@@ -134,6 +136,10 @@ public final class MessageLogger extends Plugin {
         sqlite.close();
     }
 
+    private AtomicBoolean disableDeletePatch = new AtomicBoolean(false);
+    private AtomicBoolean disableUpdatePatch = new AtomicBoolean(false);
+    private StoreStream storeStream = StoreStream.Companion.access$getCollector$p(StoreStream.Companion);
+
     private void patchWidgetChatListActions() throws Throwable {
         var hideIcon = Utils.getAppContext().getDrawable(com.lytefast.flexinput.R.e.design_ic_visibility_off).mutate();
 
@@ -159,9 +165,24 @@ public final class MessageLogger extends Plugin {
                         tw.setOnClickListener((v) -> {
                             if (isDeleted) {
                                 sqlite.removeDeletedMessage(messageId);
+                                removeCached(messageId);
+                                disableDeletePatch.set(true);
+                                StoreStream.access$handleMessageDelete(
+                                    storeStream,
+                                    new ModelMessageDelete(message.getChannelId(), messageId)
+                                );
                             }
                             if (isEdited) {
                                 sqlite.removeEditedMessage(messageId);
+                                removeCached(messageId);
+                                if(!isDeleted) {
+                                    disableUpdatePatch.set(true);
+                                    StoreStream.access$handleMessageUpdate(
+                                        storeStream,
+                                        message.synthesizeApiMessage()
+                                    );
+                                    updateMessages(messageId);
+                                }
                             }
                             Utils.showToast("Removed From Logs");
                             ((WidgetChatListActions) cf.thisObject).dismiss();
@@ -273,7 +294,7 @@ public final class MessageLogger extends Plugin {
 
     private void patchDeleteMessages() {
         patcher.patch(StoreMessagesHolder.class, "deleteMessages", new Class<?>[]{ long.class, List.class }, new PreHook(param -> {
-            if (!sqlite.getBoolSetting("logDeletes", true)) {
+            if (!sqlite.getBoolSetting("logDeletes", true) || disableDeletePatch.compareAndSet(true, false)) {
                 return;
             }
             var channelId = (long) param.args[0];
@@ -314,6 +335,7 @@ public final class MessageLogger extends Plugin {
 
     private void patchUpdateMessages() {
         patcher.patch(StoreMessagesHolder.class, "updateMessages", new Class<?>[]{ com.discord.api.message.Message.class }, new PreHook(param -> {
+            if(disableUpdatePatch.compareAndSet(true, false)) return;
             var msg = new Message((com.discord.api.message.Message) param.args[0]);
             var id = msg.getId();
             var edited = msg.getEditedTimestamp();
@@ -444,6 +466,13 @@ public final class MessageLogger extends Plugin {
 
     private void updateCached(Long id, Message message) {
         cachedMessages.put(id, message);
+    }
+
+    private void removeCached(Long id) {
+        cachedMessages.remove(id);
+        deletedMessagesRecord.remove(id);
+        editedMessagesRecord.remove(id);
+        messageRecord.remove(id);
     }
 
     // some display utils
