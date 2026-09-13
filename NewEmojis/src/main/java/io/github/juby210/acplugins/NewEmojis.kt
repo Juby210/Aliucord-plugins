@@ -89,7 +89,10 @@ class NewEmojis : Plugin() {
             object : XC_MethodHook(51) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val code = param.args[0] as String
-                    if (code == "1f97a") {
+                    if (code == "1f1f8_1f1fe") {
+                        // new syria flag emoji
+                        param.result = getUrl(code.replace("_", "-"), true);
+                    } else if (code == "1f97a") {
                         if (settings.getBool("newPleading", true)) param.result = getUrl(code, true)
                     } else if (pluginCodePoints.contains(code)) {
                         param.result = getUrl(
@@ -100,7 +103,7 @@ class NewEmojis : Plugin() {
                 }
 
                 fun getUrl(code: String, new: Boolean) =
-                    "https://jdecked.github.io/twemoji/v/${if (new) "15.0.3" else "14.1.1"}/72x72/$code.png"
+                    "https://jdecked.github.io/twemoji/v/${if (new) "16.0.1" else "14.1.1"}/72x72/$code.png"
             }
         )
     }
