@@ -1,7 +1,12 @@
-version = "1.0.4"
+version = "1.0.5"
 description = "Adds new emojis missing in old discord."
 
 aliucord.changelog.set("""
+    1.0.5 {added}
+    ======================
+
+    * updated twemoji to 16.0.1 adding unicode 16 emojis
+
     1.0.3 {added}
     ======================
 
